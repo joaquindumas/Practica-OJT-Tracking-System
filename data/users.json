@@ -1,0 +1,161 @@
+{
+    "users": {
+        "justmewacks": {
+            "name": "Joaquin Miguel Dumas",
+            "username": "justmewacks",
+            "password": "$2y$10$MviqlicFxs5.57hvuwB96.Dd9Gf0VbjdTl8wBagJ7aLhkM79d0ebi",
+            "required_hours": 240,
+            "logs": [
+                {
+                    "id": "69b8f82f3a2134.26570678",
+                    "date": "2026-02-26",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:43:59"
+                },
+                {
+                    "id": "69b8f8366c8755.85098167",
+                    "date": "2026-02-27",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:44:06"
+                },
+                {
+                    "id": "69b8f83c1619a2.46365747",
+                    "date": "2026-03-02",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:44:12"
+                },
+                {
+                    "id": "69b8f841c1f9c6.00477715",
+                    "date": "2026-03-03",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:44:17"
+                },
+                {
+                    "id": "69b8f848dbb231.82905840",
+                    "date": "2026-03-05",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:44:24"
+                },
+                {
+                    "id": "69b8f84f8bb2f0.16937959",
+                    "date": "2026-03-09",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:44:31"
+                },
+                {
+                    "id": "69b8f853bc5e04.57565975",
+                    "date": "2026-03-10",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:44:35"
+                },
+                {
+                    "id": "69b8f85e2bf375.30362052",
+                    "date": "2026-03-12",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:44:46"
+                },
+                {
+                    "id": "69b8f867dd8cb3.39198658",
+                    "date": "2026-03-13",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:44:55"
+                },
+                {
+                    "id": "69b8f86cd98307.25326928",
+                    "date": "2026-03-16",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:45:00"
+                },
+                {
+                    "id": "69b8f871a6f6e1.53718184",
+                    "date": "2026-03-17",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-17 07:45:05"
+                },
+                {
+                    "id": "69bb9598d6bee5.50920094",
+                    "date": "2026-03-19",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-19 07:20:08"
+                }
+            ],
+            "created_at": "2026-03-17 07:19:41",
+            "security_question": "What city were you born in?",
+            "security_answer": "cavite"
+        },
+        "kezialara": {
+            "name": "Kezia Lara Rivera",
+            "username": "kezialara",
+            "password": "$2y$10$\/lp8242EwePa5xxRQkbVL.rLCv1bahb9xI\/PoiUDSxNX3VIB4kq3K",
+            "required_hours": 500,
+            "logs": [],
+            "created_at": "2026-03-19 03:35:05"
+        },
+        "tyler1": {
+            "name": "Tyler Matthew Dumas",
+            "username": "tyler1",
+            "password": "$2y$10$tdBi9q4T8plEqXo7eQp6P.FKzDVGBtclXCi14IB\/KE5vMJzDY1fyu",
+            "required_hours": 240,
+            "logs": [],
+            "security_question": "What city were you born in?",
+            "security_answer": "cavite",
+            "created_at": "2026-03-19 03:49:05"
+        },
+        "will1": {
+            "name": "Will Sebastian Dumas",
+            "username": "will1",
+            "password": "$2y$10$24b7pF6I5vHf7WLrKGZfIuSTbqZD.ZWiFY8ktCSlOKv7.pZOvDIc2",
+            "required_hours": 240,
+            "logs": [
+                {
+                    "id": "69bb75e4b85a79.53837286",
+                    "date": "2026-03-19",
+                    "description": "",
+                    "from": "08:00",
+                    "to": "16:00",
+                    "hours": 8,
+                    "created_at": "2026-03-19 05:04:52"
+                }
+            ],
+            "security_question": "What city were you born in?",
+            "security_answer": "cavite",
+            "created_at": "2026-03-19 05:03:07"
+        }
+    }
+}

@@ -1,0 +1,79 @@
+body { background: var(--bg); }
+
+.auth-wrap {
+  min-height: 100vh; display: flex; align-items: center;
+  justify-content: center; background: var(--bg);
+}
+.auth-card {
+  background: var(--surface); border-radius: 18px; padding: 2.5rem 2rem;
+  width: 400px; border: 0.5px solid var(--border2);
+}
+.auth-icon-wrap {
+  width: 40px; height: 40px; border-radius: 10px; background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+.auth-icon-wrap svg { width: 20px; height: 20px; fill: white; }
+
+.auth-welcome { font-size: 22px; font-weight: 600; margin-bottom: 0.25rem; text-align: center; }
+.auth-sub { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; text-align: center; line-height: 1.5; }
+
+.auth-field { position: relative; margin-bottom: 0.75rem; text-align: left; }
+.auth-field-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); display: flex; align-items: center; pointer-events: none;
+}
+.auth-field-icon svg { width: 15px; height: 15px; }
+
+.auth-input {
+  width: 100%; padding: 11px 14px 11px 38px; border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
+  color: var(--text); background: var(--surface2); outline: none;
+  transition: border 0.15s, background 0.15s;
+}
+.auth-input:focus { border-color: var(--green); background: white; }
+.auth-input::placeholder { color: var(--text3); }
+select.auth-input { padding-left: 14px; }
+.auth-input--pw { padding-right: 42px; }
+
+.auth-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text2); display: block;
+  margin-bottom: 5px; text-align: left;
+}
+.auth-group { margin-bottom: 0.85rem; text-align: left; }
+
+.auth-forgot { text-align: right; margin-top: -0.25rem; margin-bottom: 1rem; }
+.auth-forgot a { font-size: 12px; color: var(--green); font-weight: 600; }
+
+.auth-btn {
+  width: 100%; padding: 12px; background: var(--green); color: white; border: none;
+  border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; font-weight: 600;
+  cursor: pointer; margin-top: 0.25rem; transition: background 0.15s, transform 0.1s;
+}
+.auth-btn:hover { background: var(--green-dark); }
+.auth-btn:active { transform: scale(0.99); }
+
+.auth-toggle { text-align: center; margin-top: 1.25rem; font-size: 13px; color: var(--text2); }
+.auth-toggle a { color: var(--green); font-weight: 600; text-decoration: none; }
+
+.eye-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--text3);
+  padding: 4px; display: flex; align-items: center;
+}
+.eye-toggle:hover { color: var(--text2); }
+.eye-toggle svg { width: 17px; height: 17px; }
+
+.step-indicator { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 1.5rem; }
+.step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border2); transition: background 0.2s; }
+.step-dot.active { background: var(--green); }
+.step-dot.done   { background: var(--green-mid); }
+
+.btn-back {
+  width: 100%; padding: 11px; background: none; color: var(--text2);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 0.5rem; transition: background 0.15s;
+}
+.btn-back:hover { background: var(--surface2); }
