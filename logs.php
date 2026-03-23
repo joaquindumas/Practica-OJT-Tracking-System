@@ -534,7 +534,7 @@ include 'includes/header.php';
         </label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <?php foreach (['MON','TUE','WED','THU','FRI','SAT','SUN'] as $i => $day): ?>
-            <label class="day-toggle <?= in_array($day, ['SAT','SUN']) ? 'day-toggle--excluded' : '' ?>">
+            <label class="day-toggle <?= in_array($day, ['','']) ? 'day-toggle--excluded' : '' ?>">
               <input type="checkbox" name="exclude_days[]" value="<?= $i + 1 ?>"
                      <?= in_array($day, ['','']) ? 'checked' : '' ?>
                      style="display:none;" />

@@ -1,5 +1,5 @@
 <?php
-define('APP_NAME', 'OJT Tracker');
+define('APP_NAME', 'Practica');
 
 // ── Database config ───────────────────────────────────────────
 define('DB_HOST', 'localhost');

@@ -313,9 +313,16 @@ a { text-decoration: none; color: inherit; }
   font-size: 13px;
   color: var(--red);
   font-weight: 600;
+  flex-wrap: nowrap;
 }
 .bulk-delete-bar.show { display: flex; }
-
+.bulk-delete-bar-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
 /* ── Calendar ── */
 .cal-nav {
   display: flex;
