@@ -10,7 +10,7 @@ $initials = strtoupper(substr($user['name'] ?? $user['username'] ?? 'U', 0, 1));
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= e(APP_NAME) ?> — <?= e(ucfirst($active_page ?? 'Dashboard')) ?></title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/main.css?v=<?= time() ?>" />
 </head>
 <body>
 
