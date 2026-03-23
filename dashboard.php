@@ -273,10 +273,10 @@ include 'includes/header.php';
         <?php foreach ($recent_logs as $log): ?>
           <tr>
             <td><input type="checkbox" class="log-checkbox row-checkbox" value="<?= e($log['id']) ?>" /></td>
-            <td><?= e($log['date']) ?></td>
+           <td><?= e(date('F j, Y', strtotime($log['date']))) ?></td>
             <td><?= e($log['description'] ?: '—') ?></td>
-            <td><?= e($log['from']) ?></td>
-            <td><?= e($log['to']) ?></td>
+            <td><?= e(date('g:i A', strtotime($log['from']))) ?></td>
+            <td><?= e(date('g:i A', strtotime($log['to']))) ?></td>
             <td><span class="badge badge--green"><?= e(number_format($log['hours'], 2)) ?> hrs</span></td>
             <td style="display:flex;gap:4px;align-items:center;">
               <button class="edit-btn"

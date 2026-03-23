@@ -84,6 +84,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    if ($action === 'bulk_edit_time') {
+        $ids       = $_POST['log_ids']   ?? [];
+        $bulk_from = $_POST['bulk_from'] ?? '';
+        $bulk_to   = $_POST['bulk_to']   ?? '';
+        $bulk_desc = trim($_POST['bulk_desc'] ?? '');
+
+        if ($bulk_from && $bulk_to) {
+            [$fh, $fm] = array_map('intval', explode(':', $bulk_from));
+            [$th, $tm] = array_map('intval', explode(':', $bulk_to));
+            $hours = (($th * 60 + $tm) - ($fh * 60 + $fm)) / 60;
+            if ($hours > 0) {
+                $count = 0;
+                foreach ($ids as $id) {
+                    $stmt = db()->prepare('SELECT * FROM time_logs WHERE id = ? AND user_id = ?');
+                    $stmt->execute([$id, $user['id']]);
+                    $existing = $stmt->fetch();
+                    if ($existing) {
+                        update_log($id, $user['id'], [
+                            'date'        => $existing['date'],
+                            'description' => $bulk_desc ?: ($existing['description'] ?? ''),
+                            'from'        => $bulk_from,
+                            'to'          => $bulk_to,
+                            'hours'       => round($hours, 4),
+                        ]);
+                        $count++;
+                    }
+                }
+                set_flash('success', "{$count} log" . ($count !== 1 ? 's' : '') . " updated.");
+            }
+        }
+        header('Location: logs.php');
+        exit;
+    }
+
     if ($action === 'bulk_log') {
         $start        = $_POST['bulk_start']  ?? '';
         $end          = $_POST['bulk_end']    ?? '';
@@ -129,13 +163,13 @@ foreach ($all_logs as $l) {
 $month_param = $_GET['month'] ?? date('Y-m');
 if (!preg_match('/^\d{4}-\d{2}$/', $month_param)) $month_param = date('Y-m');
 [$cal_year, $cal_month] = explode('-', $month_param);
-$cal_year   = (int) $cal_year;
-$cal_month  = (int) $cal_month;
-$prev_month = date('Y-m', mktime(0,0,0,$cal_month-1,1,$cal_year));
-$next_month = date('Y-m', mktime(0,0,0,$cal_month+1,1,$cal_year));
-$today      = date('Y-m-d');
-$month_name = date('F Y', mktime(0,0,0,$cal_month,1,$cal_year));
-$first_dow  = (int) date('N', mktime(0,0,0,$cal_month,1,$cal_year));
+$cal_year      = (int) $cal_year;
+$cal_month     = (int) $cal_month;
+$prev_month    = date('Y-m', mktime(0,0,0,$cal_month-1,1,$cal_year));
+$next_month    = date('Y-m', mktime(0,0,0,$cal_month+1,1,$cal_year));
+$today         = date('Y-m-d');
+$month_name    = date('F Y', mktime(0,0,0,$cal_month,1,$cal_year));
+$first_dow     = (int) date('N', mktime(0,0,0,$cal_month,1,$cal_year));
 $days_in_month = (int) date('t', mktime(0,0,0,$cal_month,1,$cal_year));
 
 include 'includes/header.php';
@@ -152,13 +186,12 @@ include 'includes/header.php';
     </div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;">
-    <!-- View toggle -->
     <div class="bulk-tabs" style="margin-bottom:0;padding:3px;">
-      <button type="button" class="bulk-tab active" id="view-cal-btn" data-view="calendar">
+      <button type="button" class="bulk-tab active" id="view-cal-btn">
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;margin-right:4px;vertical-align:-2px;"><path d="M20 3h-1V1h-2v2H7V1H5v2H4C2.9 3 2 3.9 2 5v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z"/></svg>
         Calendar
       </button>
-      <button type="button" class="bulk-tab" id="view-list-btn" data-view="list">
+      <button type="button" class="bulk-tab" id="view-list-btn">
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;margin-right:4px;vertical-align:-2px;"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
         List
       </button>
@@ -177,31 +210,39 @@ include 'includes/header.php';
 <!-- ═══ CALENDAR VIEW ═══ -->
 <div id="view-calendar">
 
-  <!-- Month nav -->
   <div class="cal-nav">
     <a href="logs.php?month=<?= $prev_month ?>" class="cal-nav-btn">← Prev</a>
     <div class="cal-month-title"><?= $month_name ?></div>
     <a href="logs.php?month=<?= $next_month ?>" class="cal-nav-btn">Next →</a>
   </div>
 
-  <!-- Multi-select action bar -->
+  <!-- Action bar -->
   <div class="cal-action-bar" id="cal-action-bar">
     <span id="cal-selected-count">0 days selected</span>
     <div class="cal-action-bar-btns">
       <button type="button" class="btn btn-secondary" id="cal-deselect"
               style="padding:6px 14px;font-size:12px;">Deselect all</button>
-      <form method="POST" action="logs.php" id="cal-bulk-delete-form">
+      <button type="button" class="btn btn-secondary" id="cal-bulk-edit-btn"
+              style="padding:6px 14px;font-size:12px;">✎ Edit time</button>
+      <form method="POST" action="logs.php" id="cal-bulk-delete-form" style="display:inline;">
         <input type="hidden" name="action" value="bulk_delete" />
         <div id="cal-bulk-ids"></div>
         <button type="submit" class="btn btn-danger"
                 style="padding:6px 14px;font-size:12px;border-radius:var(--radius-sm);">
-          Delete selected logs
+          Delete selected
         </button>
       </form>
     </div>
   </div>
 
   <div class="log-table-wrap" style="padding:1.25rem;margin-bottom:1.5rem;">
+
+    <!-- Select all -->
+    <div class="cal-select-all-row">
+      <input type="checkbox" id="cal-select-all" title="Select all logged days" />
+      <label for="cal-select-all" style="cursor:pointer;">Select all logged days</label>
+    </div>
+
     <!-- DOW headers -->
     <div class="cal-grid" style="margin-bottom:6px;">
       <?php foreach (['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] as $dow): ?>
@@ -235,15 +276,23 @@ include 'includes/header.php';
              data-logged="<?= $is_logged ? '1' : '0' ?>"
              data-log-ids="<?= e(implode(',', array_column($day_logs, 'id'))) ?>"
              onclick="handleDayClick(this, event)">
+
           <div class="cal-day-num"><?= $d ?></div>
+
           <?php if ($is_logged): ?>
             <div class="cal-day-hrs"><?= number_format($total_day, 1) ?>h</div>
             <?php if ($desc_first): ?>
               <div class="cal-day-desc"><?= e($desc_first) ?></div>
             <?php endif; ?>
             <div class="cal-day-dot"></div>
+            <input type="checkbox" class="cal-day-cb"
+                   data-date="<?= $date_str ?>"
+                   onclick="event.stopPropagation(); toggleCalDay(this)"
+                   title="Select <?= $date_str ?>" />
+          <?php else: ?>
+            <div class="cal-tooltip"><?= e($tooltip) ?></div>
           <?php endif; ?>
-          <div class="cal-tooltip"><?= e($tooltip) ?></div>
+
         </div>
       <?php endfor; ?>
     </div>
@@ -272,7 +321,6 @@ include 'includes/header.php';
 <!-- ═══ LIST VIEW ═══ -->
 <div id="view-list" style="display:none;">
 
-  <!-- Bulk delete bar -->
   <div class="bulk-delete-bar" id="bulk-delete-bar">
     <span id="bulk-delete-count">0 selected</span>
     <div class="bulk-delete-bar-actions">
@@ -304,10 +352,10 @@ include 'includes/header.php';
           <?php foreach ($all_logs as $log): ?>
             <tr>
               <td><input type="checkbox" class="log-checkbox row-checkbox" value="<?= e($log['id']) ?>" /></td>
-              <td><?= e($log['date']) ?></td>
+              <td><?= e(date('F j, Y', strtotime($log['date']))) ?></td>
               <td><?= e($log['description'] ?: '—') ?></td>
-              <td><?= e($log['from']) ?></td>
-              <td><?= e($log['to']) ?></td>
+              <td><?= e(date('g:i A', strtotime($log['from']))) ?></td>
+              <td><?= e(date('g:i A', strtotime($log['to']))) ?></td>
               <td><span class="badge badge--green"><?= e(number_format($log['hours'], 2)) ?> hrs</span></td>
               <td style="display:flex;gap:4px;align-items:center;">
                 <button class="edit-btn"
@@ -419,6 +467,41 @@ include 'includes/header.php';
   </div>
 </div>
 
+<!-- Calendar Bulk Edit Modal -->
+<div class="modal-overlay" id="cal-bulk-edit-modal">
+  <div class="modal-card" style="width:380px;">
+    <div class="modal-title">Edit Time for Selected Days</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1.25rem;margin-top:-0.75rem;">
+      Updates the from/to time for all logs on selected days.
+    </p>
+    <form method="POST" action="logs.php" id="cal-bulk-edit-form">
+      <input type="hidden" name="action" value="bulk_edit_time" />
+      <div id="cal-bulk-edit-ids"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">From</label>
+          <input class="form-input" type="time" name="bulk_from" id="cal-edit-from" value="08:00" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">To</label>
+          <input class="form-input" type="time" name="bulk_to" id="cal-edit-to" value="16:00" required />
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:-0.5rem;margin-bottom:1rem;">
+        Duration: <strong id="cal-edit-preview" style="color:var(--green);font-family:'DM Mono',monospace;">8.00 hrs</strong>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (optional — leave blank to keep existing)</label>
+        <input class="form-input" type="text" name="bulk_desc" placeholder="Leave blank to keep existing" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cal-bulk-edit-close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Apply to Selected</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Bulk Log Modal -->
 <div class="modal-overlay" id="bulk-modal">
   <div class="modal-card" style="width:520px;max-width:95vw;">
@@ -453,7 +536,7 @@ include 'includes/header.php';
           <?php foreach (['MON','TUE','WED','THU','FRI','SAT','SUN'] as $i => $day): ?>
             <label class="day-toggle <?= in_array($day, ['SAT','SUN']) ? 'day-toggle--excluded' : '' ?>">
               <input type="checkbox" name="exclude_days[]" value="<?= $i + 1 ?>"
-                     <?= in_array($day, ['SAT','SUN']) ? 'checked' : '' ?>
+                     <?= in_array($day, ['','']) ? 'checked' : '' ?>
                      style="display:none;" />
               <span><?= $day ?></span>
             </label>
@@ -477,6 +560,22 @@ include 'includes/header.php';
 </div>
 
 <script>
+// ── Helpers ────────────────────────────────────────────────────
+
+function formatTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour  = h % 12 || 12;
+  return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`;
+}
+function calcHrs(from, to) {
+  if (!from || !to) return 0;
+  const [fh, fm] = from.split(':').map(Number);
+  const [th, tm] = to.split(':').map(Number);
+  return ((th * 60 + tm) - (fh * 60 + fm)) / 60;
+}
+
 // ── View toggle ────────────────────────────────────────────────
 const viewCalBtn  = document.getElementById('view-cal-btn');
 const viewListBtn = document.getElementById('view-list-btn');
@@ -498,21 +597,26 @@ function setView(v) {
     localStorage.setItem('logs_view', 'list');
   }
 }
-
-// Restore saved view (default: calendar)
 const savedView = localStorage.getItem('logs_view') || 'calendar';
 setView(savedView);
-
 viewCalBtn.addEventListener('click',  () => setView('calendar'));
 viewListBtn.addEventListener('click', () => setView('list'));
 
 // ── Calendar state ─────────────────────────────────────────────
-const selectedDays  = new Set();
-const actionBar     = document.getElementById('cal-action-bar');
-const selectedCount = document.getElementById('cal-selected-count');
-const bulkIdsDiv    = document.getElementById('cal-bulk-ids');
-const calDeselect   = document.getElementById('cal-deselect');
-const calBulkForm   = document.getElementById('cal-bulk-delete-form');
+const selectedDays     = new Set();
+const actionBar        = document.getElementById('cal-action-bar');
+const selectedCount    = document.getElementById('cal-selected-count');
+const bulkIdsDiv       = document.getElementById('cal-bulk-ids');
+const calDeselect      = document.getElementById('cal-deselect');
+const calBulkForm      = document.getElementById('cal-bulk-delete-form');
+const calSelectAll     = document.getElementById('cal-select-all');
+const calBulkEditBtn   = document.getElementById('cal-bulk-edit-btn');
+const calBulkEditModal = document.getElementById('cal-bulk-edit-modal');
+const calBulkEditClose = document.getElementById('cal-bulk-edit-close');
+const calBulkEditIds   = document.getElementById('cal-bulk-edit-ids');
+const calEditFrom      = document.getElementById('cal-edit-from');
+const calEditTo        = document.getElementById('cal-edit-to');
+const calEditPreview   = document.getElementById('cal-edit-preview');
 
 const logData = <?php
   $js_map = [];
@@ -530,64 +634,103 @@ const logData = <?php
   echo json_encode($js_map);
 ?>;
 
+function buildBulkIds() {
+  [bulkIdsDiv, calBulkEditIds].forEach(container => {
+    if (!container) return;
+    container.innerHTML = '';
+    selectedDays.forEach(date => {
+      (logData[date] || []).forEach(l => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'log_ids[]'; inp.value = l.id;
+        container.appendChild(inp);
+      });
+    });
+  });
+}
+
 function updateCalActionBar() {
   if (selectedDays.size > 0) {
     actionBar.classList.add('show');
     selectedCount.textContent = selectedDays.size + ' day' + (selectedDays.size > 1 ? 's' : '') + ' selected';
-    bulkIdsDiv.innerHTML = '';
-    selectedDays.forEach(date => {
-      (logData[date] || []).forEach(l => {
-        const inp  = document.createElement('input');
-        inp.type   = 'hidden';
-        inp.name   = 'log_ids[]';
-        inp.value  = l.id;
-        bulkIdsDiv.appendChild(inp);
-      });
-    });
+    buildBulkIds();
   } else {
     actionBar.classList.remove('show');
   }
+  const allCbs = document.querySelectorAll('.cal-day-cb');
+  if (calSelectAll) calSelectAll.checked = allCbs.length > 0 && selectedDays.size === allCbs.length;
 }
 
-function handleDayClick(el, event) {
-  const date     = el.dataset.date;
-  const isLogged = el.dataset.logged === '1';
-
-  if (event.ctrlKey || event.metaKey || event.shiftKey) {
-    if (!isLogged) return;
-    if (selectedDays.has(date)) {
-      selectedDays.delete(date);
-      el.classList.remove('cal-day--selected');
-    } else {
-      selectedDays.add(date);
-      el.classList.add('cal-day--selected');
-    }
-    updateCalActionBar();
-    return;
-  }
-
-  if (isLogged) {
-    openDayModal(date);
+function toggleCalDay(cb) {
+  const date = cb.dataset.date;
+  const el   = cb.closest('.cal-day');
+  if (cb.checked) {
+    selectedDays.add(date);
+    el.classList.add('cal-day--selected');
   } else {
-    openLogModal(date);
+    selectedDays.delete(date);
+    el.classList.remove('cal-day--selected');
   }
+  updateCalActionBar();
 }
 
+// Select all logged days
+if (calSelectAll) {
+  calSelectAll.addEventListener('change', () => {
+    document.querySelectorAll('.cal-day-cb').forEach(cb => {
+      cb.checked = calSelectAll.checked;
+      const date = cb.dataset.date;
+      const el   = cb.closest('.cal-day');
+      if (calSelectAll.checked) { selectedDays.add(date); el.classList.add('cal-day--selected'); }
+      else { selectedDays.delete(date); el.classList.remove('cal-day--selected'); }
+    });
+    updateCalActionBar();
+  });
+}
+
+// Deselect all
 if (calDeselect) {
   calDeselect.addEventListener('click', () => {
-    selectedDays.forEach(d => {
-      const el = document.querySelector(`[data-date="${d}"]`);
-      if (el) el.classList.remove('cal-day--selected');
-    });
+    document.querySelectorAll('.cal-day-cb').forEach(cb => { cb.checked = false; });
+    document.querySelectorAll('.cal-day--selected').forEach(el => el.classList.remove('cal-day--selected'));
     selectedDays.clear();
     updateCalActionBar();
   });
 }
+
+// Bulk delete confirm
 if (calBulkForm) {
   calBulkForm.addEventListener('submit', e => {
     const total = document.querySelectorAll('#cal-bulk-ids input').length;
     if (!confirm(`Delete all logs for ${selectedDays.size} day(s)? (${total} entries)`)) e.preventDefault();
   });
+}
+
+// Bulk edit modal
+if (calBulkEditBtn) {
+  calBulkEditBtn.addEventListener('click', () => {
+    buildBulkIds();
+    calBulkEditModal.classList.add('open');
+  });
+}
+if (calBulkEditClose) calBulkEditClose.addEventListener('click', () => calBulkEditModal.classList.remove('open'));
+if (calBulkEditModal) calBulkEditModal.addEventListener('click', e => { if (e.target === calBulkEditModal) calBulkEditModal.classList.remove('open'); });
+
+function updateCalEditPreview() {
+  if (!calEditFrom || !calEditTo || !calEditPreview) return;
+  const hrs = calcHrs(calEditFrom.value, calEditTo.value);
+  calEditPreview.textContent = hrs > 0 ? hrs.toFixed(2) + ' hrs' : '— invalid';
+  calEditPreview.style.color = hrs > 0 ? 'var(--green)' : 'var(--red)';
+}
+if (calEditFrom) calEditFrom.addEventListener('change', updateCalEditPreview);
+if (calEditTo)   calEditTo.addEventListener('change',   updateCalEditPreview);
+
+// Day click
+function handleDayClick(el, event) {
+  if (event.target.classList.contains('cal-day-cb')) return;
+  const date     = el.dataset.date;
+  const isLogged = el.dataset.logged === '1';
+  if (isLogged) openDayModal(date);
+  else openLogModal(date);
 }
 
 // ── Log modal ──────────────────────────────────────────────────
@@ -607,11 +750,6 @@ if (openModalBtn)  openModalBtn.addEventListener('click',  () => openLogModal(nu
 if (logModalClose) logModalClose.addEventListener('click', () => logModal.classList.remove('open'));
 if (logModal)      logModal.addEventListener('click', e => { if (e.target === logModal) logModal.classList.remove('open'); });
 
-function calcHrs(from, to) {
-  const [fh, fm] = from.split(':').map(Number);
-  const [th, tm] = to.split(':').map(Number);
-  return ((th * 60 + tm) - (fh * 60 + fm)) / 60;
-}
 function updateHrsPreview() {
   if (!logFrom || !logTo || !hrsPreview) return;
   const hrs = calcHrs(logFrom.value, logTo.value);
@@ -639,7 +777,7 @@ function openDayModal(date) {
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);">
         <div>
           <div style="font-size:13px;font-weight:600;color:var(--text);">
-            ${l.from} — ${l.to}
+           ${formatTime(l.from)} — ${formatTime(l.to)}
             <span style="font-family:'DM Mono',monospace;color:var(--green);margin-left:6px;">${parseFloat(l.hours).toFixed(2)} hrs</span>
           </div>
           ${l.desc ? `<div style="font-size:12px;color:var(--text3);margin-top:2px;">${l.desc}</div>` : ''}
@@ -702,6 +840,20 @@ function openEditFromDay(id, date, from, to, desc) {
   editModal.classList.add('open');
 }
 
+// ── List view edit btns ────────────────────────────────────────
+document.querySelectorAll('.edit-btn').forEach(btn => {
+  if (!btn.dataset.id) return;
+  btn.addEventListener('click', () => {
+    document.getElementById('edit-log-id').value = btn.dataset.id;
+    document.getElementById('edit-date').value   = btn.dataset.date;
+    document.getElementById('edit-desc').value   = btn.dataset.desc;
+    document.getElementById('edit-from').value   = btn.dataset.from;
+    document.getElementById('edit-to').value     = btn.dataset.to;
+    updateEditPreview();
+    editModal.classList.add('open');
+  });
+});
+
 // ── List view multi-select ─────────────────────────────────────
 const selectAll      = document.getElementById('select-all');
 const bulkDeleteBar  = document.getElementById('bulk-delete-bar');
@@ -710,9 +862,7 @@ const bulkDeleteIds  = document.getElementById('bulk-delete-ids');
 const bulkDeselect   = document.getElementById('bulk-deselect');
 const bulkDeleteForm = document.getElementById('bulk-delete-form');
 
-function getChecked() {
-  return Array.from(document.querySelectorAll('.row-checkbox:checked'));
-}
+function getChecked() { return Array.from(document.querySelectorAll('.row-checkbox:checked')); }
 function updateBulkBar() {
   const checked = getChecked();
   if (!bulkDeleteBar) return;
@@ -723,7 +873,7 @@ function updateBulkBar() {
       bulkDeleteIds.innerHTML = '';
       checked.forEach(cb => {
         const inp = document.createElement('input');
-        inp.type  = 'hidden'; inp.name = 'log_ids[]'; inp.value = cb.value;
+        inp.type = 'hidden'; inp.name = 'log_ids[]'; inp.value = cb.value;
         bulkDeleteIds.appendChild(inp);
       });
     }
@@ -758,21 +908,6 @@ if (bulkDeleteForm) {
     if (!confirm(`Delete ${count} log${count !== 1 ? 's' : ''}? This cannot be undone.`)) e.preventDefault();
   });
 }
-
-// ── Edit btn (list view) ───────────────────────────────────────
-document.querySelectorAll('.edit-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.getElementById('edit-log-id').value = btn.dataset.id;
-    document.getElementById('edit-date').value   = btn.dataset.date;
-    document.getElementById('edit-desc').value   = btn.dataset.desc;
-    document.getElementById('edit-from').value   = btn.dataset.from;
-    document.getElementById('edit-to').value     = btn.dataset.to;
-    updateEditPreview();
-    editModal.classList.add('open');
-  });
-});
-
-// ── Delete confirm (list view) ─────────────────────────────────
 document.querySelectorAll('.delete-form').forEach(form => {
   form.addEventListener('submit', e => {
     if (!confirm('Delete this log entry?')) e.preventDefault();
@@ -783,7 +918,6 @@ document.querySelectorAll('.delete-form').forEach(form => {
 const bulkModal    = document.getElementById('bulk-modal');
 const openBulkBtn  = document.getElementById('open-bulk-btn');
 const bulkCloseBtn = document.getElementById('bulk-close-btn');
-
 if (openBulkBtn)  openBulkBtn.addEventListener('click',  () => bulkModal.classList.add('open'));
 if (bulkCloseBtn) bulkCloseBtn.addEventListener('click', () => bulkModal.classList.remove('open'));
 if (bulkModal)    bulkModal.addEventListener('click', e => { if (e.target === bulkModal) bulkModal.classList.remove('open'); });
@@ -803,7 +937,7 @@ const bulkHrs      = document.getElementById('bulk-hrs');
 const bulkToHidden = document.getElementById('bulk-to-hidden');
 function updateBulkToTime() {
   if (!bulkHrs || !bulkToHidden) return;
-  const hrs = parseFloat(bulkHrs.value) || 8;
+  const hrs   = parseFloat(bulkHrs.value) || 8;
   const toMin = 480 + Math.round(hrs * 60);
   bulkToHidden.value = `${Math.floor(toMin/60).toString().padStart(2,'0')}:${(toMin%60).toString().padStart(2,'0')}`;
   updateRangePreview();
@@ -814,7 +948,6 @@ if (bulkHrs) bulkHrs.addEventListener('change', updateBulkToTime);
 const bulkStart    = document.getElementById('bulk-start');
 const bulkEnd      = document.getElementById('bulk-end');
 const rangePreview = document.getElementById('bulk-range-preview');
-
 function updateRangePreview() {
   if (!bulkStart || !bulkEnd || !rangePreview) return;
   if (!bulkStart.value || !bulkEnd.value) { rangePreview.textContent = ''; return; }
@@ -829,8 +962,8 @@ function updateRangePreview() {
     cursor.setDate(cursor.getDate() + 1);
   }
   const hrs = parseFloat(bulkHrs?.value) || 8;
-  rangePreview.style.color   = 'var(--green-dark)';
-  rangePreview.textContent   = `${count} day${count !== 1 ? 's' : ''} will be filled — ${(hrs * count).toFixed(1)} hrs total`;
+  rangePreview.style.color = 'var(--green-dark)';
+  rangePreview.textContent = `${count} day${count !== 1 ? 's' : ''} will be filled — ${(hrs * count).toFixed(1)} hrs total`;
 }
 if (bulkStart) bulkStart.addEventListener('change', updateRangePreview);
 if (bulkEnd)   bulkEnd.addEventListener('change',   updateRangePreview);

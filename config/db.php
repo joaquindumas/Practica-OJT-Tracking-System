@@ -1,8 +1,8 @@
 <?php
-$host     = 'localhost';
-$db_name  = 'ojt_tracker';
+$host     = 'sql306.infinityfree.com';
+$db_name  = 'if0_41453530_XXX';
 $username = 'root';
-$password = '';  // default XAMPP password is empty
+$password = 'IprcWDC2TPx';  // default XAMPP password is empty
 
 $conn = new mysqli($host, $username, $password, $db_name);
 

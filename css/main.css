@@ -459,3 +459,37 @@ a { text-decoration: none; color: inherit; }
 }
 .cal-action-bar.show { display: flex; }
 .cal-action-bar-btns { display: flex; gap: 8px; }
+
+/* ── Calendar checkboxes ── */
+.cal-day-cb {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--green);
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.cal-day:hover .cal-day-cb,
+.cal-day--logged .cal-day-cb { opacity: 1; }
+.cal-day-cb:checked { opacity: 1; }
+.cal-day--selected .cal-day-cb { opacity: 1; }
+
+.cal-select-all-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.75rem;
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 600;
+}
+.cal-select-all-row input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--green);
+  cursor: pointer;
+}
