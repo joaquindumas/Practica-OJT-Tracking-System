@@ -10,29 +10,27 @@ $password_errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';
 
-  if ($action === 'update_profile') {
-    $name = trim($_POST['name'] ?? '');
+if ($action === 'update_profile') {
+    $name    = trim($_POST['name'] ?? '');
     $req_hrs = (float) ($_POST['required_hours'] ?? 0);
+
     if (!$name) {
-      $profile_errors[] = 'Name cannot be empty.';
+        $profile_errors[] = 'Name cannot be empty.';
     } elseif ($req_hrs < 1) {
-      $profile_errors[] = 'Enter a valid number of required hours.';
+        $profile_errors[] = 'Enter a valid number of required hours.';
     } else {
-      $user['name'] = $name;
-      $user['required_hours'] = $req_hrs;
-      if (!empty($_POST['security_question']))
-        $user['security_question'] = $_POST['security_question'];
-      if (!empty($_POST['security_answer']))
-        $user['security_answer'] = strtolower(trim($_POST['security_answer']));
-      save_user($user);
-      set_flash('success', 'Profile saved!');
-      header('Location: settings.php');
-      if (isset($_POST['allowance_per_day'])) {
-    $user['allowance_per_day'] = (float) $_POST['allowance_per_day'];
-}
-      exit;
+        $user['name']              = $name;
+        $user['required_hours']    = $req_hrs;
+        $user['allowance_per_day'] = (float) ($_POST['allowance_per_day'] ?? 150);
+
+        if (!empty($_POST['security_question'])) $user['security_question'] = $_POST['security_question'];
+        if (!empty($_POST['security_answer']))   $user['security_answer']   = strtolower(trim($_POST['security_answer']));
+        save_user($user);
+        set_flash('success', 'Profile saved!');
+        header('Location: settings.php');
+        exit;
     }
-  }
+}
 
   if ($action === 'change_password') {
     $current = $_POST['current_password'] ?? '';

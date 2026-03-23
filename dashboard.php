@@ -61,18 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if ($action === 'update_allowance') {
-    $new_allowance = (float) ($_POST['allowance_per_day'] ?? 150);
-    if ($new_allowance > 0) {
-        $user['allowance_per_day'] = $new_allowance;
-        save_user($user);
-        set_flash('success', 'Allowance updated!');
-    }
-    header('Location: dashboard.php');
-    exit;
-}
-        header('Location: dashboard.php');
-        exit;
     }
 
     if ($action === 'delete_log') {
@@ -312,10 +300,6 @@ include 'includes/header.php';
     <div class="progress-title">💰 Allowance Summary</div>
     <div style="display:flex;align-items:center;gap:10px;">
       <div style="font-size:11px;color:var(--text3);">₱<?= number_format($allowance_per_day, 2) ?>/day</div>
-      <button type="button" class="btn btn-secondary" id="open-allowance-btn"
-              style="padding:4px 12px;font-size:11px;border-radius:999px;">
-        Edit
-      </button>
     </div>
   </div>
   <!-- rest of allowance card stays the same -->
@@ -325,7 +309,7 @@ include 'includes/header.php';
         ['Days logged',              $total_days . ' days',                    'var(--text)'],
         ['Earned so far',            '₱' . number_format($total_allowance),    'var(--green)'],
         ['Remaining days (est.)',    $projected_days . ' days',                'var(--text2)'],
-        ['Remaining allowance (est.)','₱' . number_format($projected_allowance),'var(--text2)'],
+        ['Remaining allowance','₱' . number_format($projected_allowance),'var(--text2)'],
         ['Total projected',          '₱' . number_format($total_projected),    'var(--green)'],
       ];
     ?>
@@ -555,26 +539,8 @@ include 'includes/header.php';
   </div>
 </div>
 
-<!-- Quick Edit Allowance Modal -->
-<div class="modal-overlay" id="allowance-modal">
-  <div class="modal-card" style="width:340px;">
-    <div class="modal-title">Edit Daily Allowance</div>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:1.25rem;margin-top:-0.75rem;">
-      Set your daily allowance in Philippine Peso (₱).
-    </p>
-    <form method="POST" action="dashboard.php">
-      <input type="hidden" name="action" value="update_allowance" />
-      <div class="form-group">
-        <label class="form-label">Allowance per Day (₱)</label>
-        <input class="form-input" type="number" name="allowance_per_day"
-               value="<?= e(number_format($allowance_per_day, 2, '.', '')) ?>"
-               min="0" step="0.01" required />
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" id="allowance-close-btn">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save</button>
-      </div>
-    </form>
+  
+</form>
   </div>
 </div>
 
