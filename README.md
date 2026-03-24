@@ -1,4 +1,4 @@
-# OJT Calcu — PHP Edition
+# Practica-OJT-Tracking-System
 
 A PHP-based OJT (On-the-Job Training) internship hours tracker.
 
@@ -7,6 +7,7 @@ A PHP-based OJT (On-the-Job Training) internship hours tracker.
 ```
 ojt_tracker/
 │
+├── landing.php         ← Overview of the System
 ├── index.php           ← Login & Register page
 ├── dashboard.php       ← Main dashboard with stats & progress
 ├── logs.php            ← Full time logs table
