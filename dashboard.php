@@ -221,15 +221,15 @@ include 'includes/header.php';
 .dash-stat-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 1.25rem 1.75rem;
+  gap: 14px;
+  padding: 1.5rem 1.75rem;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 
 .dash-stat-card {
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
+  border-radius: 14px;
+  padding: 1.75rem 1.75rem;
   cursor: default;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -241,41 +241,53 @@ include 'includes/header.php';
   background: var(--green-dark);
 }
 .dash-stat-card--remaining {
-  background: #fff8f0;
-  border: 1px solid #fde8c8;
+  background: #f0faf2;
+  border: 1px solid #c8e6d0;
+}
+.dash-stat-card--remaining .dash-stat-eyebrow { color: var(--green-mid); }
+.dash-stat-card--remaining .dash-stat-num { color: var(--green-dark); }
+.dash-stat-card--remaining .dash-stat-sub { color: var(--green-mid); }
+.dash-remaining-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(45,106,79,0.1);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--green-dark);
+  margin-top: 10px;
 }
 .dash-stat-eyebrow {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .dash-stat-card--progress .dash-stat-eyebrow { color: rgba(149,213,178,0.65); }
-.dash-stat-card--remaining .dash-stat-eyebrow { color: #c2773a; }
 
 .dash-stat-num {
-  font-size: 2.25rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 .dash-stat-card--progress .dash-stat-num { color: white; }
-.dash-stat-card--remaining .dash-stat-num { color: #9a3c0a; }
 
 .dash-stat-sub {
-  font-size: 11px;
-  margin-top: 4px;
+  font-size: 12px;
+  margin-top: 6px;
 }
 .dash-stat-card--progress .dash-stat-sub { color: rgba(149,213,178,0.6); }
-.dash-stat-card--remaining .dash-stat-sub { color: #c2773a; }
 
 .dash-progress-bar {
-  height: 5px;
+  height: 6px;
   border-radius: 999px;
   background: rgba(255,255,255,0.15);
   overflow: hidden;
-  margin: 10px 0 6px;
+  margin: 14px 0 8px;
 }
 .dash-progress-fill {
   height: 100%;
@@ -289,44 +301,51 @@ include 'includes/header.php';
   gap: 5px;
   background: rgba(255,255,255,0.1);
   border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 11px;
+  padding: 5px 12px;
+  font-size: 12px;
   font-weight: 500;
   color: rgba(149,213,178,0.9);
-  margin-top: 8px;
-}
-.dash-remaining-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(194,119,58,0.1);
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  color: #b45309;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 /* ── Body grid ── */
 .dash-body {
   display: grid;
   grid-template-columns: 1fr 300px;
-  min-height: calc(100vh - 220px);
+  min-height: calc(100vh - 180px);
+  align-items: start;
 }
 .dash-left {
-  padding: 1.25rem 1.75rem;
+  padding: 1.5rem 1.75rem;
   border-right: 1px solid var(--border);
+  min-height: calc(100vh - 180px);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
+}
+.dash-logs-section {
+  display: flex;
+  flex-direction: column;
+}
+.dash-logs-section .table-wrap {
+  background: var(--surface);
 }
 .dash-right {
-  padding: 1.25rem;
+  padding: 1.5rem;
   background: var(--bg);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
+  overflow-y: auto;
+}
+
+/* ── Fix time inputs: keep clickable, uppercase AM/PM only ── */
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+  text-transform: uppercase;
+}
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+  cursor: pointer;
 }
 
 /* ── Section title ── */
@@ -367,7 +386,7 @@ include 'includes/header.php';
   border-bottom: 1px solid var(--border);
 }
 .dash-log-table td {
-  padding: 10px 12px;
+  padding: 9px 12px;
   font-size: 12.5px;
   border-bottom: 1px solid var(--border);
   color: var(--text);
@@ -375,9 +394,19 @@ include 'includes/header.php';
   transition: background 0.12s;
 }
 .dash-log-table tr:last-child td { border-bottom: none; }
-.dash-log-row { transition: background 0.12s ease; }
-.dash-log-row:hover td { background: var(--green-xlight); }
-.dash-log-row:hover .dash-hrs-val { color: var(--green-dark); }
+.dash-log-table tbody tr:last-child td { border-bottom: none !important; }
+.dash-log-row { transition: background 0.12s ease; border-bottom: 1px solid var(--border); }
+.dash-log-row:last-child { border-bottom: none; }
+.dash-log-row:hover { background: var(--green-xlight); }
+.dash-log-row:hover td { background: transparent; }
+.dash-log-row button:hover {
+  background: var(--green-light) !important;
+  color: var(--green-dark) !important;
+}
+.dash-log-row .delete-form button:hover {
+  background:#fee2e2 !important;
+  color: var(--red) !important;
+}
 
 .dash-hrs-val {
   font-size: 14px;
@@ -479,20 +508,18 @@ include 'includes/header.php';
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 0;
+  padding: 10px 4px;
   border-bottom: 1px solid var(--border);
   transition: background 0.12s ease;
   border-radius: 6px;
   margin: 0 -4px;
-  padding-left: 4px;
-  padding-right: 4px;
 }
 .dash-week-row:last-child { border-bottom: none; }
 .dash-week-row:hover { background: var(--green-xlight); }
 .dash-week-badge {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: var(--green-xlight);
   display: flex;
   align-items: center;
@@ -522,8 +549,8 @@ include 'includes/header.php';
 }
 .dash-insight:hover { box-shadow: 0 4px 16px rgba(45,106,79,0.12); }
 .dash-insight-icon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   background: white;
   display: flex;
@@ -565,7 +592,7 @@ include 'includes/header.php';
       <div class="dash-stat-eyebrow">Total Progress</div>
       <div class="dash-stat-num">
         <?= number_format($logged, 1) ?>
-        <span style="font-size:1rem;font-weight:400;opacity:0.45;"> / <?= number_format($required, 0) ?> hrs</span>
+        <span style="font-size:1.1rem;font-weight:400;opacity:0.45;"> / <?= number_format($required, 0) ?> hrs</span>
       </div>
       <div class="dash-progress-bar">
         <div class="dash-progress-fill" style="width:<?= min(100, $pct) ?>%;"></div>
@@ -573,7 +600,7 @@ include 'includes/header.php';
       <div class="dash-stat-sub"><?= number_format($pct, 1) ?>% complete</div>
       <?php if ($est_date && $est_date !== 'Completed'): ?>
         <div class="dash-est-pill">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:10px;height:10px;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
           Est. <?= e($est_date) ?>
         </div>
       <?php elseif ($est_date === 'Completed'): ?>
@@ -586,12 +613,12 @@ include 'includes/header.php';
       <div class="dash-stat-eyebrow">Remaining Hours</div>
       <div class="dash-stat-num">
         <?= number_format($remaining, 1) ?>
-        <span style="font-size:1rem;font-weight:400;opacity:0.45;"> hrs</span>
+        <span style="font-size:1.1rem;font-weight:400;opacity:0.45;"> hrs</span>
       </div>
-      <div class="dash-stat-sub" style="margin-top:4px;">hours left to complete your OJT</div>
+      <div class="dash-stat-sub" style="margin-top:6px;">hours left to complete your OJT</div>
       <?php if ($avg_hrs_day > 0): ?>
         <div class="dash-remaining-pill">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:10px;height:10px;"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px;"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           Avg <?= $avg_hrs_day ?> hrs/day · <?= $projected_days ?> days left
         </div>
       <?php else: ?>
@@ -600,134 +627,209 @@ include 'includes/header.php';
     </div>
   </div>
 
-  <!-- Body grid -->
-  <div class="dash-body">
+<div class="dash-body">
 
-    <!-- Left column -->
-    <div class="dash-left">
+  <!-- Left column -->
+  <div class="dash-left">
 
-      <!-- Monthly progress bar -->
-      <div class="dash-monthly-card">
-        <div class="dash-monthly-top">
-          <div class="dash-monthly-label"><?= $month_name ?> — <?= $month_days ?> days logged</div>
-          <div class="dash-monthly-pct"><?= number_format($pct, 1) ?>%</div>
-        </div>
-        <div class="dash-monthly-track">
-          <div class="dash-monthly-fill" style="width:<?= min(100, $required > 0 ? ($logged / $required * 100) : 0) ?>%;"></div>
-        </div>
-        <?php if ($est_basis): ?>
-          <div style="font-size:11px;color:var(--text3);margin-top:6px;"><?= e($est_basis) ?></div>
-        <?php endif; ?>
-      </div>
-
-      <!-- Recent logs -->
-      <div>
-        <div class="dash-section-title">
-          Recent Logs
-          <a href="logs.php">
+    <!-- Recent logs -->
+    <div class="dash-logs-section">
+      <!-- Section header: toggles between title row and bulk-action bar, same height -->
+      <div id="logs-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;min-height:28px;">
+        <!-- Normal title (visible by default) -->
+        <div id="logs-title-row" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+          <span style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text2);">Recent Logs</span>
+          <a href="logs.php" style="font-size:11px;color:var(--green);font-weight:600;display:flex;align-items:center;gap:3px;">
             View all
             <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
           </a>
         </div>
-
-        <!-- Bulk delete bar -->
-        <div class="bulk-delete-bar" id="bulk-delete-bar">
-          <span id="bulk-delete-count">0 selected</span>
-          <div class="bulk-delete-bar-actions">
-            <button type="button" class="btn btn-secondary btn-sm" id="bulk-deselect">Deselect all</button>
-            <form method="POST" action="dashboard.php" id="bulk-delete-form">
+        <!-- Bulk-action bar (hidden by default, shown when rows selected) -->
+        <div id="bulk-delete-bar" style="display:none;align-items:center;justify-content:space-between;width:100%;background:#fff5f5;border:1px solid #fecaca;border-radius:8px;padding:6px 12px;">
+          <span id="bulk-delete-count" style="font-size:12px;font-weight:700;color:#dc2626;">0 selected</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" class="btn btn-secondary btn-sm" id="bulk-deselect" style="font-size:11px;padding:4px 10px;">Deselect all</button>
+            <form method="POST" action="dashboard.php" id="bulk-delete-form" style="display:inline;">
               <input type="hidden" name="action" value="bulk_delete" />
               <div id="bulk-delete-ids"></div>
-              <button type="submit" class="btn btn-danger btn-sm">Delete selected</button>
+              <button type="submit" class="btn btn-danger btn-sm" style="font-size:11px;padding:4px 10px;">Delete selected</button>
             </form>
           </div>
         </div>
-
-        <div class="table-wrap">
-          <table class="dash-log-table">
-            <thead>
-              <tr>
-                <th style="width:32px;"><input type="checkbox" class="log-checkbox" id="select-all" /></th>
-                <th>Date</th>
-                <th>Description</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Hrs</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if (empty($recent_logs)): ?>
-                <tr><td colspan="7">
-                  <div class="empty-state">
-                    <div class="empty-state-icon"><svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>
-                    <div class="empty-state-title">No logs yet</div>
-                    <div class="empty-state-desc">Click "New Log Entry" to get started</div>
-                  </div>
-                </td></tr>
-              <?php else: ?>
-                <?php foreach ($recent_logs as $log): ?>
-                <tr class="dash-log-row">
-                  <td><input type="checkbox" class="log-checkbox row-checkbox" value="<?= e($log['id']) ?>" /></td>
-                  <td style="font-weight:500;white-space:nowrap;color:var(--text2);"><?= e(date('M j, Y', strtotime($log['date']))) ?></td>
-                  <td style="color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= e($log['description'] ?: '—') ?></td>
-                  <td style="font-variant-numeric:tabular-nums;color:var(--text3);"><?= e(date('g:i A', strtotime($log['from']))) ?></td>
-                  <td style="font-variant-numeric:tabular-nums;color:var(--text3);"><?= e(date('g:i A', strtotime($log['to']))) ?></td>
-                  <td><span class="dash-hrs-val"><?= e(number_format($log['hours'], 1)) ?></span></td>
-                  <td>
-                    <div style="display:flex;gap:2px;">
-                      <button class="edit-btn"
-                        data-id="<?= e($log['id']) ?>"
-                        data-date="<?= e($log['date']) ?>"
-                        data-desc="<?= e($log['description'] ?? '') ?>"
-                        data-from="<?= e($log['from']) ?>"
-                        data-to="<?= e($log['to']) ?>"
-                        title="Edit">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                      </button>
-                      <form method="POST" action="dashboard.php" class="delete-form">
-                        <input type="hidden" name="action" value="delete_log" />
-                        <input type="hidden" name="log_id" value="<?= e($log['id']) ?>" />
-                        <button type="submit" class="delete-btn" title="Delete">
-                          <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-                <?php endforeach; ?>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
       </div>
 
+      <div class="table-wrap" style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface);">
+        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+          <colgroup>
+            <col style="width:36px;" />
+            <col style="width:120px;" />
+            <col style="width:auto;" />
+            <col style="width:95px;" />
+            <col style="width:95px;" />
+            <col style="width:55px;" />
+            <col style="width:60px;" />
+          </colgroup>
+          <thead>
+            <tr style="background:var(--bg2);border-bottom:1px solid var(--border);">
+              <th style="padding:7px 12px;text-align:left;">
+                <input type="checkbox" class="log-checkbox" id="select-all" style="width:14px;height:14px;accent-color:var(--green);cursor:pointer;" />
+              </th>
+              <th style="padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);text-align:left;">Date</th>
+              <th style="padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);text-align:left;">Description</th>
+              <th style="padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);text-align:left;">From</th>
+              <th style="padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);text-align:left;">To</th>
+              <th style="padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);text-align:left;">Hrs</th>
+              <th style="padding:7px 12px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (empty($recent_logs)): ?>
+              <tr>
+                <td colspan="7" style="padding:3rem;text-align:center;">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                    <div style="width:48px;height:48px;background:var(--bg2);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                      <svg viewBox="0 0 24 24" fill="var(--text3)" style="width:20px;height:20px;"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+                    </div>
+                    <div style="font-size:14px;font-weight:600;color:var(--text2);">No logs yet</div>
+                    <div style="font-size:12px;color:var(--text3);">Click "New Log Entry" to get started</div>
+                  </div>
+                </td>
+              </tr>
+            <?php else: ?>
+              <?php foreach ($recent_logs as $log): ?>
+              <tr class="dash-log-row">
+                <td style="padding:9px 12px;">
+                  <input type="checkbox" class="log-checkbox row-checkbox" value="<?= e($log['id']) ?>"
+                         style="width:14px;height:14px;accent-color:var(--green);cursor:pointer;" />
+                </td>
+                <td style="padding:9px 12px;font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;">
+                  <?= e(date('M j, Y', strtotime($log['date']))) ?>
+                </td>
+                <td style="padding:9px 12px;font-size:12.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                  <?= e($log['description'] ?: '—') ?>
+                </td>
+                <td style="padding:9px 12px;font-size:12.5px;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap;">
+                  <?= e(date('g:i A', strtotime($log['from']))) ?>
+                </td>
+                <td style="padding:9px 12px;font-size:12.5px;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap;">
+                  <?= e(date('g:i A', strtotime($log['to']))) ?>
+                </td>
+                <td style="padding:9px 12px;">
+                  <span style="font-size:15px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;">
+                    <?= e(number_format($log['hours'], 1)) ?>
+                  </span>
+                </td>
+                <td style="padding:9px 12px;">
+                  <div style="display:flex;gap:4px;align-items:center;justify-content:flex-end;">
+                    <button class="edit-btn"
+                      data-id="<?= e($log['id']) ?>"
+                      data-date="<?= e($log['date']) ?>"
+                      data-desc="<?= e($log['description'] ?? '') ?>"
+                      data-from="<?= e($log['from']) ?>"
+                      data-to="<?= e($log['to']) ?>"
+                      title="Edit"
+                      style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:none;border:none;cursor:pointer;color:var(--text3);transition:all 0.12s;">
+                      <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </button>
+                    <form method="POST" action="dashboard.php" class="delete-form" style="display:inline;">
+                      <input type="hidden" name="action" value="delete_log" />
+                      <input type="hidden" name="log_id" value="<?= e($log['id']) ?>" />
+                      <button type="submit" title="Delete"
+                        style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:none;border:none;cursor:pointer;color:var(--text3);transition:all 0.12s;">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Right column -->
-    <div class="dash-right">
+  </div>
 
-      <!-- Weekly summaries -->
-      <div class="dash-right-card">
-        <div class="dash-right-card-head">
-          <div>
-            <div class="dash-right-card-title">Weekly Summaries</div>
-            <div class="dash-right-card-sub"><?= $month_name ?></div>
-          </div>
+  <!-- Right column -->
+  <div class="dash-right">
+
+    <!-- Today's Status card -->
+    <div class="dash-right-card" style="border-radius: 16px;">
+
+      <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #fafafa;">
+        <div>
+          <div style="font-size: 13px; font-weight: 800; color: var(--text);">Today's Status</div>
+          <div style="font-size: 10px; color: var(--text3); margin-top: 2px;"><?= date('D, M j, Y') ?></div>
         </div>
-        <div class="dash-right-card-body">
-          <?php foreach (array_reverse($weekly_summaries) as $w): ?>
-          <div class="dash-week-row">
-            <div class="dash-week-badge"><?= $w['num'] ?></div>
-            <div class="dash-week-info">
-              <div class="dash-week-title"><?= $w['label'] ?></div>
-              <div class="dash-week-sub"><?= $w['days'] ?> log<?= $w['days'] !== 1 ? 's' : '' ?></div>
-            </div>
-            <div class="dash-week-hrs"><?= $w['hrs'] ?>h</div>
-          </div>
-          <?php endforeach; ?>
-        </div>
+
+        <?php
+          $today_str = date('Y-m-d');
+          $today_log = null; $today_hrs = 0;
+          foreach ($all_logs as $l) {
+            if ($l['date'] === $today_str) { $today_log = $l; $today_hrs += $l['hours']; }
+          }
+        ?>
+
+        <span style="font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1px solid <?= $today_log ? '#a7f3d0' : '#fde68a' ?>; background: <?= $today_log ? '#ecfdf5' : '#fffbeb' ?>; color: <?= $today_log ? '#065f46' : '#92400e' ?>;">
+          <?= $today_log ? 'Logged' : 'Pending' ?>
+        </span>
       </div>
+
+      <div style="padding: 1.25rem;">
+        <?php if ($today_log): ?>
+          <div style="text-align: center; padding: 0.75rem 0;">
+            <div style="width: 52px; height: 52px; border-radius: 14px; background: var(--green); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+              <svg viewBox="0 0 24 24" fill="white" style="width: 26px; height: 26px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            </div>
+            <div style="font-size: 16px; font-weight: 800; color: var(--text);">Log Recorded</div>
+            <div style="font-size: 13px; color: var(--text2); margin-top: 5px;"><strong><?= number_format($today_hrs, 1) ?> hours</strong> added today</div>
+          </div>
+        <?php else: ?>
+          <form method="POST" action="dashboard.php">
+            <input type="hidden" name="action" value="log_hours" />
+            <input type="hidden" name="date" value="<?= date('Y-m-d') ?>" />
+
+            <div style="margin-bottom: 1rem;">
+              <textarea name="description" placeholder="Briefly describe your tasks..."
+                     style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; outline: none; background: var(--bg); min-height: 80px; resize: none; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem;">
+              <div>
+                <label style="font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; margin-bottom: 4px; display: block;">From</label>
+                <input type="time" name="from" value="08:00" style="width: 100%; padding: 7px 6px; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; font-weight: 600; background: var(--bg); box-sizing: border-box;">
+              </div>
+              <div>
+                <label style="font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; margin-bottom: 4px; display: block;">To</label>
+                <input type="time" name="to" value="16:00" style="width: 100%; padding: 7px 6px; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; font-weight: 600; background: var(--bg); box-sizing: border-box;">
+              </div>
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 13px; background: var(--green); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">
+              Save Log
+            </button>
+          </form>
+        <?php endif; ?>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function updateQuickPreview() {
+  const from = document.getElementById('quick-from')?.value;
+  const to   = document.getElementById('quick-to')?.value;
+  const prev = document.getElementById('quick-preview');
+  if (!from || !to || !prev) return;
+  const [fh, fm] = from.split(':').map(Number);
+  const [th, tm] = to.split(':').map(Number);
+  const hrs = ((th * 60 + tm) - (fh * 60 + fm)) / 60;
+  prev.textContent = hrs > 0 ? hrs.toFixed(1) + ' hrs' : '— invalid';
+  prev.style.color = hrs > 0 ? 'var(--green)' : 'var(--red)';
+}
+</script>
 
 <!-- Log Hours Modal -->
 <div class="modal-overlay" id="log-modal">
@@ -854,4 +956,3 @@ include 'includes/header.php';
 
 <?php if (!empty($log_errors)) echo '<script>document.getElementById("log-modal").classList.add("open");</script>'; ?>
 <?php include 'includes/footer.php'; ?>
-
