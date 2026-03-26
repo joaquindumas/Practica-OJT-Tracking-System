@@ -195,7 +195,7 @@ include 'includes/header.php';
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
-.dash-header-left {}
+
 .dash-eyebrow {
   font-size: 10px;
   font-weight: 600;
