@@ -50,8 +50,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $user = current_user(); $all_logs = $user['logs'] ?? []; usort($all_logs, fn($a, $b) => strtotime($b['date']) - strtotime($a['date']));
-$total_hrs = total_logged($user); $required = $user['required_hours'] ?? 240; $log_map = [];
-foreach ($all_logs as $l) { $log_map[$l['date']][] = $l; }
+$log_map = []; foreach ($all_logs as $l) { $log_map[$l['date']][] = $l; }
+
+// ── PAGINATION LOGIC (6 Logs per page) ──
+$logs_per_page = 6;
+$current_page = max(1, intval($_GET['page'] ?? 1));
+$total_logs = count($all_logs);
+$total_pages = ceil($total_logs / $logs_per_page);
+if ($current_page > $total_pages && $total_pages > 0) $current_page = $total_pages;
+$paginated_logs = array_slice($all_logs, ($current_page - 1) * $logs_per_page, $logs_per_page);
 
 $month_param = $_GET['month'] ?? date('Y-m'); if (!preg_match('/^\d{4}-\d{2}$/', $month_param)) $month_param = date('Y-m');
 [$cal_year, $cal_month] = explode('-', $month_param); $cal_year = (int) $cal_year; $cal_month = (int) $cal_month;
@@ -70,16 +77,28 @@ include 'includes/header.php';
 .dash-wrap * { font-family: 'Inter', sans-serif !important; }
 .dash-wrap { padding: 1.25rem 2rem; width: 100%; box-sizing: border-box; }
 
-/* ── HEADER ── */
-.logs-header-wrap { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 20px;}
+/* ── BULLETPROOF HEADER ALIGNMENT ── */
+.logs-header-wrap { 
+    display: flex; 
+    flex-direction: row;
+    align-items: center; 
+    justify-content: space-between; 
+    margin-bottom: 1.5rem; 
+    width: 100%;
+}
+.logs-header-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 .logs-title { font-size: 2.15rem; font-weight: 800; color: var(--text); letter-spacing: -0.04em; line-height: 1; margin: 0; }
-.dash-sync { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); font-weight: 600; margin-top: 6px; }
+.dash-sync { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); font-weight: 600; margin-top: 8px; }
 .sync-dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; position: relative; }
 .sync-dot::after { content: ''; position: absolute; width: 100%; height: 100%; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
 @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 70% { transform: scale(2.5); opacity: 0; } 100% { opacity: 0; } }
 
-/* ── DASHBOARD MATCHING BUTTONS ── */
-.logs-actions { display: flex; gap: 10px; align-items: center; padding-bottom: 4px; }
+/* ── BUTTONS FIXED TO RIGHT ── */
+.logs-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 .btn { padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; outline: none; }
 .btn-outline { background: white; color: var(--text, #1a1a1a); border: 1px solid var(--border, #e0e0e0); }
 .btn-outline:hover { background: #fafafa; border-color: #d1d5db; }
@@ -89,7 +108,7 @@ include 'includes/header.php';
 .btn-primary:hover { background: #1b4332; border-color: #1b4332; }
 
 /* ── EXACT CALENDAR DIMENSIONS ── */
-.new-cal-card { background: white; border-radius: 18px; padding: 1.25rem; border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.02); margin-bottom: 1.5rem; }
+.new-cal-card { background: white; border-radius: 18px; padding: 1.25rem 1.5rem; border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.02); margin-bottom: 1.5rem; }
 .new-cal-header { display: flex; align-items: center; gap: 16px; margin-bottom: 1rem; }
 .new-cal-header h2 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; color: var(--text); }
 .new-cal-nav { display: flex; gap: 6px; }
@@ -114,7 +133,7 @@ include 'includes/header.php';
 .new-cal-date { font-size: 12px; font-weight: 500; color: #555; margin-bottom: 4px; display: block; }
 .pill-logged { background: #f0faf2; border-left: 3px solid #2d6a4f; color: #1b4332; padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; width: fit-content; margin-top: auto;}
 
-/* ── LIST VIEW ── */
+/* ── LIST VIEW & PAGINATION ── */
 .list-table-wrap { background: white; border-radius: 16px; padding: 1.5rem; border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,0.02); overflow-x: auto; }
 .log-table { width: 100%; border-collapse: collapse; min-width: 600px; }
 .log-table thead tr { border-bottom: 1px solid #eee; text-align: left; font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -123,21 +142,25 @@ include 'includes/header.php';
 .log-table tbody tr:hover { background: #fcfcfc; }
 .bulk-delete-bar { display: none; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fff5f5; border: 1px solid #fecaca; border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;}
 
-/* ── MODAL DAY TOGGLES (CSS ONLY "X") ── */
+/* Custom Pagination Buttons */
+.page-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; color: #475569; text-decoration: none; transition: all 0.2s ease; }
+.page-btn:hover:not(.disabled) { border-color: #cbd5e1; color: #0f172a; background: #f8fafc; }
+.page-btn.disabled { opacity: 0.4; cursor: default; }
+
+/* ── MODAL TYPOGRAPHY & DESIGN ── */
+.modal-card { font-family: 'Inter', sans-serif; border-radius: 16px; padding: 1.5rem; }
 .modal-title-serif { font-family: 'Fraunces', serif !important; font-size: 1.5rem; font-weight: 700; color: #1b4332; margin-bottom: 4px; }
-.form-label-styled { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #5c7065; margin-bottom: 6px; display: block; }
+.form-label-styled { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; margin-bottom: 6px; display: block; }
+.form-input-styled { font-family: 'Inter', sans-serif; width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #1e293b; box-sizing: border-box; outline: none; transition: border-color 0.2s ease; }
+.form-input-styled:focus { border-color: #2d6a4f; }
 .day-toggle { padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 999px; font-size: 11px; font-weight: 700; cursor: pointer; background: white; color: #64748b; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; }
 .day-toggle:hover { border-color: #cbd5e1; }
 .day-toggle--excluded { border-color: #ef4444; color: #ef4444; background: white; }
 .day-toggle--excluded::before { content: '✕'; margin-right: 4px; font-weight: 800; }
 
-/* ── LAPTOP ADJUSTMENTS ── */
-@media (max-width: 1440px) { 
-    .logs-title { font-size: 1.85rem; } 
-    .new-cal-cell { min-height: 62px; padding: 6px; } 
-}
-
+@media (max-width: 1440px) { .logs-title { font-size: 1.85rem; } .new-cal-cell { min-height: 61px; padding: 6px; } }
 @media (max-width: 768px) { 
+    /* Only allow stacking on true mobile sizes */
     .logs-header-wrap { flex-direction: column; align-items: flex-start; gap: 1rem; } 
     .logs-actions { width: 100%; display: flex; flex-wrap: wrap; } 
     .logs-actions button { flex: 1; justify-content: center; min-width: 120px;} 
@@ -146,8 +169,8 @@ include 'includes/header.php';
 
 <div class="dash-wrap">
     <div class="logs-header-wrap">
-        <div>
-            <h1 class="logs-title">Time Logs 👋</h1>
+        <div class="logs-header-left">
+            <h1 class="logs-title">Time Logs 🕓</h1>
             <div class="dash-sync">
                 <span class="sync-dot"></span>
                 Last synced at <?= date('g:i A') ?>
@@ -202,8 +225,8 @@ include 'includes/header.php';
             <table class="log-table">
                 <thead><tr><th><input type="checkbox" id="select-all" style="cursor:pointer;" /></th><th>Date</th><th>Description</th><th>From</th><th>To</th><th>Hrs</th><th></th></tr></thead>
                 <tbody>
-                    <?php if (empty($all_logs)): ?><tr><td colspan="7" style="text-align:center; padding:3rem; color:#888;">No logs found.</td></tr><?php else: ?>
-                    <?php foreach ($all_logs as $log): ?>
+                    <?php if (empty($paginated_logs)): ?><tr><td colspan="7" style="text-align:center; padding:3rem; color:#888;">No logs found.</td></tr><?php else: ?>
+                    <?php foreach ($paginated_logs as $log): ?>
                     <tr>
                         <td><input type="checkbox" class="row-checkbox" value="<?= e($log['id']) ?>" style="cursor:pointer; accent-color:#2d6a4f;" /></td>
                         <td style="font-weight:600; color:var(--text);"><?= e(date('M j, Y', strtotime($log['date']))) ?></td>
@@ -219,17 +242,42 @@ include 'includes/header.php';
                     <?php endforeach; ?><?php endif; ?>
                 </tbody>
             </table>
+
+            <?php if ($total_pages > 1): ?>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:1rem; border-top:1px solid #f0f0f0;">
+                <span style="font-size:12px; font-weight:500; color:#64748b;">Showing page <?= $current_page ?> of <?= $total_pages ?></span>
+                <div style="display:flex; gap:8px;">
+                    <?php if ($current_page > 1): ?>
+                        <a href="?month=<?= $month_param ?>&page=<?= $current_page - 1 ?>" class="page-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></a>
+                    <?php else: ?>
+                        <span class="page-btn disabled"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></span>
+                    <?php endif; ?>
+                    
+                    <?php if ($current_page < $total_pages): ?>
+                        <a href="?month=<?= $month_param ?>&page=<?= $current_page + 1 ?>" class="page-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></a>
+                    <?php else: ?>
+                        <span class="page-btn disabled"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
 <div class="modal-overlay" id="log-modal">
-  <div class="modal-card"><div class="modal-title-serif">New Log Entry</div><div class="modal-subtitle" style="font-size:13px; color:#555; margin-bottom:1.5rem;">Record your OJT hours for a specific day.</div>
+  <div class="modal-card">
+    <div class="modal-title-serif">New Log Entry</div>
+    <div style="font-size:13px; color:#64748b; margin-bottom:1.5rem;">Record your OJT hours for a specific day.</div>
+    
     <?php foreach ($log_errors as $err): ?><span class="form-error" style="color:#ef4444; font-size:12px; display:block; margin-bottom:10px;"><?= e($err) ?></span><?php endforeach; ?>
-    <form method="POST" action="logs.php"><input type="hidden" name="action" value="log_hours" />
-      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Date</label><input class="form-input" type="date" id="log-date" name="date" value="<?= date('Y-m-d') ?>" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;" /></div>
-      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Description (Optional)</label><input class="form-input" type="text" id="log-desc" name="description" placeholder="What did you work on?" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;" /></div>
-      <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1rem;"><div class="form-group"><label class="form-label-styled">From</label><input class="form-input" type="time" id="log-from" name="from" value="08:00" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;" /></div><div class="form-group"><label class="form-label-styled">To</label><input class="form-input" type="time" id="log-to" name="to" value="16:00" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;" /></div></div>
+    
+    <form method="POST" action="logs.php">
+      <input type="hidden" name="action" value="log_hours" />
+      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Date</label><input class="form-input-styled" type="date" id="log-date" name="date" value="<?= date('Y-m-d') ?>" required /></div>
+      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Description (Optional)</label><input class="form-input-styled" type="text" id="log-desc" name="description" placeholder="What did you work on?" /></div>
+      <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:1rem;"><div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="time" id="log-from" name="from" value="08:00" required /></div><div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="time" id="log-to" name="to" value="16:00" required /></div></div>
+      
       <div style="font-size:12px;color:var(--text3);margin-bottom:1.5rem;">Duration: <strong id="hrs-preview" style="color:#2d6a4f;">8.00 hrs</strong></div>
       <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;"><button type="button" class="btn btn-outline" id="modal-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Save Log</button></div>
     </form>
@@ -237,11 +285,16 @@ include 'includes/header.php';
 </div>
 
 <div class="modal-overlay" id="edit-modal">
-  <div class="modal-card"><div class="modal-title-serif">Edit Log</div><div class="modal-subtitle" style="font-size:13px; color:#555; margin-bottom:1.5rem;">Update the details for this log entry.</div>
-    <form method="POST" action="logs.php"><input type="hidden" name="action" value="edit_log" /><input type="hidden" name="log_id" id="edit-log-id" />
-      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Date</label><input class="form-input" type="date" id="edit-date" name="date" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;"/></div>
-      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Description</label><input class="form-input" type="text" id="edit-desc" name="description" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;"/></div>
-      <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1rem;"><div class="form-group"><label class="form-label-styled">From</label><input class="form-input" type="time" id="edit-from" name="from" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;"/></div><div class="form-group"><label class="form-label-styled">To</label><input class="form-input" type="time" id="edit-to" name="to" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;"/></div></div>
+  <div class="modal-card">
+    <div class="modal-title-serif">Edit Log</div>
+    <div style="font-size:13px; color:#64748b; margin-bottom:1.5rem;">Update the details for this log entry.</div>
+    
+    <form method="POST" action="logs.php">
+      <input type="hidden" name="action" value="edit_log" /><input type="hidden" name="log_id" id="edit-log-id" />
+      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Date</label><input class="form-input-styled" type="date" id="edit-date" name="date" required /></div>
+      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Description</label><input class="form-input-styled" type="text" id="edit-desc" name="description" /></div>
+      <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:1rem;"><div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="time" id="edit-from" name="from" required /></div><div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="time" id="edit-to" name="to" required /></div></div>
+      
       <div style="font-size:12px;color:var(--text3);margin-bottom:1.5rem;">Duration: <strong id="edit-hrs-preview" style="color:#2d6a4f;"></strong></div>
       <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;"><button type="button" class="btn btn-outline" id="edit-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
     </form>
@@ -256,17 +309,20 @@ include 'includes/header.php';
 </div>
 
 <div class="modal-overlay" id="bulk-modal">
-  <div class="modal-card" style="max-width:520px;"><div class="modal-title-serif">Bulk Entry</div><div class="modal-subtitle" style="font-size:13px; color:#555; margin-bottom:1.5rem;">Fill past days automatically. Already-logged days are skipped.</div>
+  <div class="modal-card" style="max-width:520px;">
+    <div class="modal-title-serif">Bulk Entry</div>
+    <div style="font-size:13px; color:#64748b; margin-bottom:1.5rem;">Fill past days automatically. Already-logged days are skipped.</div>
+    
     <form method="POST" action="logs.php"><input type="hidden" name="action" value="bulk_log" />
       <div style="display:grid;grid-template-columns:1fr 1fr 90px;gap:12px;margin-bottom:1.25rem;">
-        <div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input" type="date" name="bulk_start" id="bulk-start" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;"/></div>
-        <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input" type="date" name="bulk_end" id="bulk-end" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;"/></div>
-        <div class="form-group" style="margin:0;"><label class="form-label-styled">Hrs/Day</label><input class="form-input" type="number" name="bulk_hrs" id="bulk-hrs" value="8" min="0.5" max="24" step="0.5" required style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;"/></div>
+        <div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="date" name="bulk_start" id="bulk-start" required /></div>
+        <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="date" name="bulk_end" id="bulk-end" required /></div>
+        <div class="form-group" style="margin:0;"><label class="form-label-styled">Hrs/Day</label><input class="form-input-styled" type="number" name="bulk_hrs" id="bulk-hrs" value="8" min="0.5" max="24" step="0.5" required /></div>
       </div>
       <input type="hidden" name="bulk_from" value="08:00" /><input type="hidden" name="bulk_to" id="bulk-to-hidden" value="16:00" />
       
       <div class="form-group" style="margin-bottom:1.25rem;">
-        <label class="form-label-styled" style="margin-bottom:10px;">Exclude Days <span style="color:#888; font-weight:500; font-size:10px;">(SELECTED = SKIP)</span></label>
+        <label class="form-label-styled" style="margin-bottom:10px;">Exclude Days <span style="color:#888; font-weight:500; font-size:10px; text-transform:none;">(SELECTED = SKIP)</span></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <?php foreach (['MON','TUE','WED','THU','FRI','SAT','SUN'] as $i => $day): ?>
                 <label class="day-toggle <?= in_array($day, ['SAT','SUN']) ? 'day-toggle--excluded' : '' ?>">
@@ -277,7 +333,7 @@ include 'includes/header.php';
         </div>
       </div>
 
-      <div class="form-group" style="margin-bottom:1.25rem;"><label class="form-label-styled">Description (optional)</label><input class="form-input" type="text" name="bulk_desc" placeholder="e.g. OJT at company" style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px;"/></div>
+      <div class="form-group" style="margin-bottom:1.25rem;"><label class="form-label-styled">Description (optional)</label><input class="form-input-styled" type="text" name="bulk_desc" placeholder="e.g. OJT at company" /></div>
       <div id="bulk-range-preview" style="font-size:12px;margin-bottom:1.5rem;min-height:16px;color:#2d6a4f;font-weight:600;"></div>
       <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:10px;"><button type="button" class="btn btn-outline" id="bulk-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Fill Days in Range</button></div>
     </form>
@@ -290,7 +346,7 @@ function formatTime(t) { if (!t) return ''; const [h, m] = t.split(':').map(Numb
 function calcHrs(from, to) { if (!from || !to) return 0; const [fh, fm] = from.split(':').map(Number); const [th, tm] = to.split(':').map(Number); return ((th * 60 + tm) - (fh * 60 + fm)) / 60; }
 const logData = <?php $js_map = []; foreach ($log_map as $date => $dlogs) { if (substr($date, 0, 7) !== $month_param) continue; $js_map[$date] = array_map(fn($l) => ['id' => $l['id'], 'from' => $l['from'], 'to' => $l['to'], 'hours' => $l['hours'], 'desc' => $l['description'] ?? '', 'date' => $l['date']], $dlogs); } echo json_encode($js_map); ?>;
 
-// ── VIEW TOGGLE ──
+// ── VIEW TOGGLE (Persists on Pagination reload!) ──
 const viewListBtn = document.getElementById('view-toggle-btn'); 
 const viewCal = document.getElementById('calendar-container'); 
 const viewList = document.getElementById('list-container');
@@ -345,13 +401,27 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
     }); 
 });
 
-// ── HOURS PREVIEW ──
+// ── HOURS PREVIEW LOGIC ──
 const logFrom = document.getElementById('log-from'), logTo = document.getElementById('log-to'), hrsPreview = document.getElementById('hrs-preview');
 const editFrom = document.getElementById('edit-from'), editTo = document.getElementById('edit-to'), editPreview = document.getElementById('edit-hrs-preview');
-function updateHrsPreview() { if(!logFrom||!logTo)return; const hrs = calcHrs(logFrom.value, logTo.value); hrsPreview.textContent = hrs > 0 ? hrs.toFixed(2) + ' hrs' : '— invalid'; hrsPreview.style.color = hrs > 0 ? '#2d6a4f' : '#dc2626'; }
-function updateEditPreview() { if(!editFrom||!editTo)return; const hrs = calcHrs(editFrom.value, editTo.value); editPreview.textContent = hrs > 0 ? hrs.toFixed(2) + ' hrs' : '— invalid'; editPreview.style.color = hrs > 0 ? '#2d6a4f' : '#dc2626'; }
-if(logFrom) logFrom.addEventListener('change', updateHrsPreview); if(logTo) logTo.addEventListener('change', updateHrsPreview);
-if(editFrom) editFrom.addEventListener('change', updateEditPreview); if(editTo) editTo.addEventListener('change', updateEditPreview);
+
+function updateHrsPreview() { 
+    if(!logFrom || !logTo) return; 
+    const hrs = calcHrs(logFrom.value, logTo.value); 
+    hrsPreview.textContent = hrs > 0 ? hrs.toFixed(2) + ' hrs' : '— invalid'; 
+    hrsPreview.style.color = hrs > 0 ? '#2d6a4f' : '#dc2626'; 
+}
+function updateEditPreview() { 
+    if(!editFrom || !editTo) return; 
+    const hrs = calcHrs(editFrom.value, editTo.value); 
+    editPreview.textContent = hrs > 0 ? hrs.toFixed(2) + ' hrs' : '— invalid'; 
+    editPreview.style.color = hrs > 0 ? '#2d6a4f' : '#dc2626'; 
+}
+
+if(logFrom) logFrom.addEventListener('change', updateHrsPreview); 
+if(logTo) logTo.addEventListener('change', updateHrsPreview);
+if(editFrom) editFrom.addEventListener('change', updateEditPreview); 
+if(editTo) editTo.addEventListener('change', updateEditPreview);
 
 // ── DAY MODAL (Multiple logs on same day) ──
 let currentDayDate = '';
@@ -366,11 +436,10 @@ function openEditFromDay(id, date, from, to, desc) { dayModal.classList.remove('
 document.getElementById('day-modal-close')?.addEventListener('click', () => dayModal.classList.remove('open'));
 document.getElementById('day-modal-add')?.addEventListener('click', () => { dayModal.classList.remove('open'); document.getElementById('log-date').value = currentDayDate; logModal.classList.add('open'); });
 
-// ── BULK LOGIC (FIXED TOGGLE BEHAVIOR) ──
+// ── BULK LOGIC ──
 document.querySelectorAll('.day-toggle input[type="checkbox"]').forEach(cb => { 
     cb.addEventListener('change', (e) => { 
         const label = e.target.closest('.day-toggle');
-        // Native CSS toggle
         label.classList.toggle('day-toggle--excluded', e.target.checked);
         updateRangePreview(); 
     }); 
