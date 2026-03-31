@@ -12,7 +12,89 @@ $name     = $user['name'] ?? $user['username'] ?? '';
   <title><?= e(APP_NAME) ?> — <?= e(ucfirst($active_page ?? 'Dashboard')) ?></title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/main.css?v=<?= time() ?>" />
+
+  <style>
+    :root {
+      /* Base size: 16px */
+      --text-xs: 0.64rem;     /* 10.24px  (Small text) */
+      --text-sm: 0.8rem;      /* 12.80px  (Paragraph small) */
+      --text-base: 1rem;      /* 16.00px  (p, base text) */
+      --text-md: 1.25rem;     /* 20.00px  (h6) */
+      --text-lg: 1.563rem;    /* 25.00px  (h5) */
+      --text-xl: 1.953rem;    /* 31.25px  (h4) */
+      --text-2xl: 2.441rem;   /* 39.06px  (h3) */
+      --text-3xl: 3.052rem;   /* 48.83px  (h2) */
+      --text-4xl: 3.815rem;   /* 61.04px  (h1) */
+    }
+
+    /* ── UNIFIED PAGE HEADER ── */
+/* ── UNIFIED PAGE HEADER ── */
+.page-header {
+  display: flex;
+  align-items: flex-start; /* Aligns everything to the top to stop buttons from dropping */
+  justify-content: space-between;
+  margin-bottom: 2rem; /* Adds a bit more breathing room below the header */
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Tighter gap between title and subtitle */
+}
+
+.page-title {
+  font-family: 'Fraunces', serif !important;
+  font-size: var(--text-2xl); /* Ensures it hits that perfect ~31px size */
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  line-height: 1; /* Eliminates extra vertical spacing */
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  display: flex;
+  align-items: center; /* Perfectly centers the dot with the text */
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text3);
+  font-weight: 600;
+  margin-top: 2px; /* Tiny optical adjustment */
+}
+
+/* Fix for the dot alignment */
+.sync-dot { 
+  width: 6px; 
+  height: 6px; 
+  background: #10b981; 
+  border-radius: 50%; 
+  position: relative; 
+  flex-shrink: 0; /* Prevents the dot from getting squished by flexbox */
+}
+.sync-dot::after { 
+  content: ''; position: absolute; width: 100%; height: 100%; 
+  background: #10b981; border-radius: 50%; animation: pulse 2s infinite; 
+}
+
+.page-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 4px; /* Pushes the buttons down just enough to center with the H1 */
+}
+
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .page-actions { width: 100%; display: flex; margin-top: 0; }
+  .page-actions button { flex: 1; justify-content: center; }
+}
+  </style>
 </head>
+
 <body>
 
 <?php if ($flash): ?>
@@ -37,7 +119,6 @@ $name     = $user['name'] ?? $user['username'] ?? '';
       </div>
       <div>
         <div class="sidebar-brand-name"><?= e(APP_NAME) ?></div>
-        <div class="sidebar-brand-sub">Student Portal</div>
       </div>
     </div>
 

@@ -46,8 +46,6 @@ include 'includes/header.php';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 .dash-wrap * { font-family: 'Inter', sans-serif !important; }
 .dash-wrap { padding: 0; }
-.dash-header { padding: 1.5rem 1.75rem 1rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--surface); }
-.dash-title { font-size: 1.85rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
 .dash-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
 .dash-actions { display: flex; gap: 8px; }
 .dash-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 1.5rem 1.75rem; background: var(--bg); border-bottom: 1px solid var(--border); }
@@ -87,8 +85,7 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { text-transform: uppercase
   .dash-header { padding: 2.5rem 1.75rem 1.5 rem; display: flex;  align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--surface); }
   .dash-stat-row { padding: 1rem 1.25rem; gap: 12px; }
   .dash-stat-card { padding: 1.25rem; }
-  .dash-title { font-size: 1.85rem; font-weight: 800; color: var(--text); letter-spacing: -0.04em; line-height: 1.1;  }
-  .dash-stat-num { font-size: 2.25rem; }
+  .dash-stat-num { font-size: var(--text-3xl); }
   .dash-progress-bar { margin: 10px 0 6px; height: 5px; }
   .dash-right-card form textarea { min-height: 50px; margin-bottom: 0.5rem; }
 }
@@ -110,11 +107,24 @@ input[type="time"]::-webkit-datetime-edit-ampm-field { text-transform: uppercase
 </style>
 
 <div class="dash-wrap">
-  <div class="dash-header">
-    <div class="dash-title">Welcome back, <?= e(explode(' ', $user['name'] ?? $user['username'])[0]) ?> 👋</div>
-    <div class="dash-actions"><button class="btn btn-secondary btn-sm" id="open-bulk-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg> Bulk Log</button><button class="btn btn-primary btn-sm" id="open-modal-btn"><svg viewBox="0 0 24 24" fill="white"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> New Log Entry</button></div>
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">Welcome back, <?= e(explode(' ', $user['name'] ?? $user['username'])[0]) ?> 👋</h1>
+      </div>
+    <div class="page-actions">
+         
+    <button class="btn btn-secondary" id="open-bulk-btn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 17 12 22 22 17"></polyline>
+        <polyline points="2 12 12 17 22 12"></polyline>
+    </svg>
+    Bulk Log
+</button>
+        <button class="btn btn-primary btn-sm" id="open-modal-btn"><svg viewBox="0 0 24 24" fill="white" style="width:14px;height:14px;margin-right:4px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> New Log Entry</button>
+    </div>
   </div>
-
+  
   <div class="dash-stat-row">
     <div class="dash-stat-card dash-stat-card--progress"><div class="dash-stat-eyebrow">Total Progress</div><div class="dash-stat-num"><?= number_format($logged, 1) ?> <span style="font-size:1.1rem;font-weight:400;opacity:0.45;">/ <?= number_format($required, 0) ?> hrs</span></div><div class="dash-progress-bar"><div class="dash-progress-fill" style="width:<?= min(100, $pct) ?>%;"></div></div><div class="dash-stat-sub"><?= number_format($pct, 1) ?>% complete</div><?php if ($est_date && $est_date !== 'Completed'): ?><div class="dash-est-pill"><svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px;"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg> Est. <?= e($est_date) ?></div><?php elseif ($est_date === 'Completed'): ?><div class="dash-est-pill">🎉 Completed!</div><?php endif; ?></div>
     <div class="dash-stat-card dash-stat-card--remaining"><div class="dash-stat-eyebrow">Remaining Hours</div><div class="dash-stat-num"><?= number_format($remaining, 1) ?> <span style="font-size:1.1rem;font-weight:400;opacity:0.45;">hrs</span></div><div class="dash-stat-sub" style="margin-top:6px;">hours left to complete your OJT</div><?php if ($avg_hrs_day > 0): ?><div class="dash-remaining-pill"><svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px;"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg> Avg <?= $avg_hrs_day ?> hrs/day · <?= $projected_days ?> days left</div><?php else: ?><div class="dash-remaining-pill">Log hours to see your pace</div><?php endif; ?></div>
