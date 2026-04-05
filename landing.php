@@ -229,7 +229,7 @@ $forgot_render_step = ($auth_mode === 'forgot') ? $fp_step : 1;
       <div class="hero-stat-label">Free to use</div>
     </div>
     <div class="hero-stat-divider"></div>
-    <div class="hero-stat hero-stat--currency">
+    <div class="hero-stat">
       <div class="hero-stat-num">₱</div>
       <div class="hero-stat-label">Allowance tracker</div>
     </div>
