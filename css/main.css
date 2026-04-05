@@ -88,7 +88,7 @@ a { text-decoration: none; color: inherit; }
 .nav-item--logout:hover { color: #fca5a5; background: rgba(252,165,165,0.1); transform: translateX(3px); }
 
 /* ── Main ── */
-.main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; min-width: 0; }
+.main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow-y: auto; min-width: 0; }
 .page-header { padding: 1.5rem 2rem 0; margin-bottom: 1.5rem; flex-shrink: 0; }
 .page-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .page-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 4px; }
@@ -152,10 +152,10 @@ a { text-decoration: none; color: inherit; }
 .empty-state-desc { font-size: 13px; }
 
 /* ── Modal & Popups ── */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(27,67,50,0.4); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
-.modal-overlay.open { display: flex; }
-.modal-card { background: var(--surface); border-radius: var(--radius); padding: 1.75rem; width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); animation: modalIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
-@keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.modal-overlay { position: fixed; inset: 0; background: rgba(27,67,50,0.4); align-items: center; justify-content: center; z-index: 200; padding: 1rem; opacity: 0; pointer-events: none; display: flex; transition: opacity 0.2s ease; will-change: opacity; }
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-card { background: var(--surface); border-radius: var(--radius); padding: 1.75rem; width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; transform: translateY(10px) scale(0.98); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease; will-change: transform, opacity; }
+.modal-overlay.open .modal-card { transform: translateY(0) scale(1); opacity: 1; }
 .modal-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
 .modal-subtitle { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; }
 .modal-actions { display: flex; gap: 8px; margin-top: 1.5rem; justify-content: flex-end; }

@@ -11,7 +11,12 @@ $name     = $user['name'] ?? $user['username'] ?? '';
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= e(APP_NAME) ?> — <?= e(ucfirst($active_page ?? 'Dashboard')) ?></title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  
   <link rel="stylesheet" href="css/main.css?v=<?= time() ?>" />
+
+  <?php if (isset($page_css)): ?>
+    <link rel="stylesheet" href="<?= $page_css ?>?v=<?= time() ?>" />
+  <?php endif; ?>
 
   <style>
     :root {
@@ -27,13 +32,12 @@ $name     = $user['name'] ?? $user['username'] ?? '';
       --text-4xl: 3.815rem;   /* 61.04px  (h1) */
     }
 
-    /* ── UNIFIED PAGE HEADER ── */
 /* ── UNIFIED PAGE HEADER ── */
 .page-header {
   display: flex;
-  align-items: flex-start; /* Aligns everything to the top to stop buttons from dropping */
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 2rem; /* Adds a bit more breathing room below the header */
+  margin-bottom: 2.5rem; 
   width: 100%;
   flex-wrap: wrap;
   gap: 16px;
@@ -42,51 +46,45 @@ $name     = $user['name'] ?? $user['username'] ?? '';
 .page-title-group {
   display: flex;
   flex-direction: column;
-  gap: 4px; /* Tighter gap between title and subtitle */
+  gap: 4px;
 }
 
 .page-title {
-  font-family: 'Fraunces', serif !important;
-  font-size: var(--text-2xl); /* Ensures it hits that perfect ~31px size */
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: var(--text-3xl); /* Bumping this up just a touch if needed */
   font-weight: 800;
   color: var(--text);
   margin: 0;
-  line-height: 1; /* Eliminates extra vertical spacing */
+  line-height: 1;
   letter-spacing: -0.02em;
-}
-
-.page-subtitle {
-  display: flex;
-  align-items: center; /* Perfectly centers the dot with the text */
-  gap: 6px;
-  font-size: var(--text-xs);
-  color: var(--text3);
-  font-weight: 600;
-  margin-top: 2px; /* Tiny optical adjustment */
-}
-
-/* Fix for the dot alignment */
-.sync-dot { 
-  width: 6px; 
-  height: 6px; 
-  background: #10b981; 
-  border-radius: 50%; 
-  position: relative; 
-  flex-shrink: 0; /* Prevents the dot from getting squished by flexbox */
-}
-.sync-dot::after { 
-  content: ''; position: absolute; width: 100%; height: 100%; 
-  background: #10b981; border-radius: 50%; animation: pulse 2s infinite; 
 }
 
 .page-actions {
   display: flex;
-  gap: 10px;
+  gap: 14px; 
   align-items: center;
   flex-shrink: 0;
-  margin-top: 4px; /* Pushes the buttons down just enough to center with the H1 */
+  margin-top: 0; 
 }
 
+
+.page-actions .btn {
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  padding: 12px 24px !important;
+  border-radius: 10px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Scales up the SVG icons inside those buttons to match the new size */
+.page-actions .btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  margin-right: 6px; /* Gives the icon space from the text */
+}
 @media (max-width: 768px) {
   .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
   .page-actions { width: 100%; display: flex; margin-top: 0; }
@@ -133,11 +131,6 @@ $name     = $user['name'] ?? $user['username'] ?? '';
       <a href="logs.php" class="nav-item <?= ($active_page === 'logs') ? 'active' : '' ?>">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
         Time Logs
-      </a>
-
-      <a href="analytics.php" class="nav-item <?= ($active_page === 'analytics') ? 'active' : '' ?>">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-        Analytics
       </a>
 
       <div class="nav-section">Account</div>
