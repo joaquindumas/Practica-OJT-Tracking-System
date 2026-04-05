@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </button>
         </div>
         <div class="auth-forgot"><a href="forgot_password.php">Forgot password?</a></div>
-        <button type="submit" class="auth-btn">Sign in →</button>
+        <button type="submit" class="auth-btn">Sign in</button>
       </form>
       <div class="auth-toggle">No account yet? <a href="index.php?mode=register">Create one</a></div>
 

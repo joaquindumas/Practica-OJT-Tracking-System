@@ -90,8 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="auth-icon-wrap">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h7.35c-.22-.62-.35-1.29-.35-2 0-3.31 2.69-6 6-6 .34 0 .67.03 1 .08V9H3V7h16v2.35c.72.22 1.39.57 2 1V5c0-1.1-.9-2-2-2z"/>
-        <path d="M19 15c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm1 4.5h-1.5V21h-1v-3H19v1.5h1v1z"/>
+        <path d="M17 10h-1V7a4 4 0 1 0-8 0v3H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-7-3a2 2 0 1 1 4 0v3h-4V7z"/>
+        <path d="M12 13a2.25 2.25 0 0 0-2.25 2.25h1.5a.75.75 0 1 1 1.5 0c0 .34-.17.57-.58.88-.56.41-1.17.96-1.17 2.02V19h1.5v-.56c0-.44.15-.62.7-1.05.57-.44 1.05-1 1.05-2.14A2.25 2.25 0 0 0 12 13z"/>
+        <circle cx="12" cy="20.2" r="0.85"/>
       </svg>
     </div>
 
@@ -111,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
           </div>
           <input class="auth-input" type="text" name="username"
-                 placeholder="your_username" required />
+                 placeholder="Username" required />
         </div>
         <button type="submit" class="auth-btn">Continue ›</button>
       </form>

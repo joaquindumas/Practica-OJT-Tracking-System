@@ -4,6 +4,158 @@ if (is_logged_in()) {
     header('Location: dashboard.php');
     exit;
 }
+
+$auth_mode = $_GET['auth'] ?? 'login';
+if (!in_array($auth_mode, ['login', 'register', 'forgot'], true)) {
+  $auth_mode = 'login';
+}
+
+$auth_errors = [];
+$auth_notice = '';
+$auth_open = isset($_GET['auth']);
+
+$reg_step = (int) ($_POST['reg_step'] ?? 1);
+$reg_data = [
+  'name'           => $_POST['name'] ?? '',
+  'username'       => $_POST['username'] ?? '',
+  'required_hours' => $_POST['required_hours'] ?? '',
+  'password'       => $_POST['password'] ?? '',
+];
+
+$fp_step = (int) ($_POST['fp_step'] ?? 1);
+$fp_username = strtolower(trim($_POST['fp_username'] ?? ''));
+$fp_question = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $auth_action = $_POST['auth_action'] ?? 'login';
+  $auth_open = true;
+
+  if ($auth_action === 'login') {
+    $auth_mode = 'login';
+    $username = strtolower(trim($_POST['username'] ?? ''));
+    $password = $_POST['password'] ?? '';
+
+    if (!$username || !$password) {
+      $auth_errors[] = 'Please fill in all fields.';
+    } else {
+      $user = get_user($username);
+      if (!$user) {
+        $auth_errors[] = 'Username not found.';
+      } elseif (!verify_password($password, $user['password'])) {
+        $auth_errors[] = 'Incorrect password.';
+      } else {
+        $_SESSION['username'] = $username;
+        header('Location: dashboard.php');
+        exit;
+      }
+    }
+  }
+
+  if ($auth_action === 'register') {
+    $auth_mode = 'register';
+
+    if ($reg_step === 1) {
+      $name = trim($_POST['name'] ?? '');
+      $username = strtolower(trim($_POST['username'] ?? ''));
+      $req_hrs = (float) ($_POST['required_hours'] ?? 500);
+      $password = $_POST['password'] ?? '';
+
+      if (!$name || !$username || !$password) {
+        $auth_errors[] = 'Please fill in all fields.';
+      } elseif (strlen($password) < 6) {
+        $auth_errors[] = 'Password must be at least 6 characters.';
+      } elseif ($req_hrs < 1) {
+        $auth_errors[] = 'Enter a valid number of required hours.';
+      } elseif (get_user($username)) {
+        $auth_errors[] = 'Username already taken.';
+      } else {
+        $reg_step = 2;
+      }
+    } elseif ($reg_step === 2) {
+      $name = trim($_POST['name'] ?? '');
+      $username = strtolower(trim($_POST['username'] ?? ''));
+      $req_hrs = (float) ($_POST['required_hours'] ?? 500);
+      $password = $_POST['password'] ?? '';
+      $sec_question = trim($_POST['security_question'] ?? '');
+      $sec_answer = trim($_POST['security_answer'] ?? '');
+
+      if (!$sec_question || !$sec_answer) {
+        $auth_errors[] = 'Please select a security question and provide an answer.';
+      } else {
+        save_user([
+          'name' => $name,
+          'username' => $username,
+          'password' => hash_password($password),
+          'required_hours' => $req_hrs,
+          'security_question' => $sec_question,
+          'security_answer' => strtolower(trim($sec_answer)),
+        ]);
+
+        $_SESSION['username'] = $username;
+        header('Location: dashboard.php');
+        exit;
+      }
+    }
+  }
+
+  if ($auth_action === 'forgot') {
+    $auth_mode = 'forgot';
+
+    if ($fp_step === 1) {
+      if (!$fp_username) {
+        $auth_errors[] = 'Please enter your username.';
+      } else {
+        $user = get_user($fp_username);
+        if (!$user) {
+          $auth_errors[] = 'Username not found.';
+        } elseif (!isset($user['security_question'])) {
+          $auth_errors[] = 'This account has no security question set.';
+        } else {
+          $fp_question = $user['security_question'];
+          $fp_step = 2;
+        }
+      }
+    } elseif ($fp_step === 2) {
+      $fp_answer = trim($_POST['fp_answer'] ?? '');
+      if (!$fp_answer) {
+        $auth_errors[] = 'Please enter your answer.';
+        $fp_question = get_security_question($fp_username);
+      } elseif (!verify_security_answer($fp_username, $fp_answer)) {
+        $auth_errors[] = 'Incorrect answer. Please try again.';
+        $fp_question = get_security_question($fp_username);
+      } else {
+        $fp_step = 3;
+      }
+    } elseif ($fp_step === 3) {
+      $new_pw = $_POST['new_password'] ?? '';
+      $confirm_pw = $_POST['confirm_password'] ?? '';
+      $user = get_user($fp_username);
+
+      if (strlen($new_pw) < 6) {
+        $auth_errors[] = 'Password must be at least 6 characters.';
+      } elseif ($new_pw !== $confirm_pw) {
+        $auth_errors[] = 'Passwords do not match.';
+      } elseif ($user && verify_password($new_pw, $user['password'])) {
+        $auth_errors[] = 'New password cannot be the same as your current password.';
+      } else {
+        if ($user) {
+          $user['password'] = hash_password($new_pw);
+          save_user($user);
+        }
+        $auth_mode = 'login';
+        $auth_notice = 'Password reset successfully. You can sign in now.';
+        $fp_step = 1;
+      }
+    }
+  }
+}
+
+if ($auth_mode === 'forgot' && $fp_step === 2 && !$fp_question && $fp_username) {
+  $fp_question = get_security_question($fp_username);
+}
+
+$register_render_step = ($auth_mode === 'register') ? $reg_step : 1;
+$forgot_render_step = ($auth_mode === 'forgot') ? $fp_step : 1;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -31,8 +183,8 @@ if (is_logged_in()) {
   <div class="nav-links">
     <a href="#features" class="nav-link">Features</a>
     <a href="#how" class="nav-link">How it works</a>
-    <a href="index.php" class="nav-btn nav-btn-outline">Log in</a>
-    <a href="index.php?mode=register" class="nav-btn nav-btn-solid">Get started</a>
+    <button type="button" class="nav-btn nav-btn-outline" data-open-auth="login">Log in</button>
+    <button type="button" class="nav-btn nav-btn-solid" data-open-auth="register">Get started</button>
   </div>
 </nav>
 
@@ -43,7 +195,7 @@ if (is_logged_in()) {
 
   <div class="hero-badge">
     <span class="hero-badge-dot"></span>
-    Built for Filipino Interns
+    OJT Tracking Platform
   </div>
 
   <h1 class="hero-title">
@@ -52,18 +204,18 @@ if (is_logged_in()) {
   </h1>
 
   <p class="hero-sub">
-    <?= e(APP_NAME) ?> helps you log, monitor, and analyze your On-the-Job Training hours —
+    <?= e(APP_NAME) ?> helps you log, monitor, and manage your On-the-Job Training hours —
     so you always know where you stand and when you'll finish.
   </p>
 
   <div class="hero-ctas">
-    <a href="index.php?mode=register" class="btn-hero-primary">
+    <button type="button" class="btn-hero-primary" data-open-auth="register">
       <svg viewBox="0 0 24 24" fill="white"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
       Start tracking for free
-    </a>
-    <a href="index.php" class="btn-hero-secondary">
+    </button>
+    <button type="button" class="btn-hero-secondary" data-open-auth="login">
       Log in to my account
-    </a>
+    </button>
   </div>
 
   <div class="hero-stats">
@@ -77,7 +229,7 @@ if (is_logged_in()) {
       <div class="hero-stat-label">Free to use</div>
     </div>
     <div class="hero-stat-divider"></div>
-    <div class="hero-stat">
+    <div class="hero-stat hero-stat--currency">
       <div class="hero-stat-num">₱</div>
       <div class="hero-stat-label">Allowance tracker</div>
     </div>
@@ -89,6 +241,126 @@ if (is_logged_in()) {
   </div>
 
 </section>
+
+<div id="auth-modal" class="auth-modal <?= $auth_open ? 'open' : '' ?>" aria-hidden="<?= $auth_open ? 'false' : 'true' ?>" data-initial-mode="<?= e($auth_mode) ?>">
+  <div class="auth-modal-backdrop" data-close-auth></div>
+  <div class="auth-modal-card" role="dialog" aria-modal="true" aria-label="Authentication dialog">
+    <button type="button" class="auth-modal-close" data-close-auth aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+
+    <div class="auth-modal-tabs">
+      <button type="button" class="auth-modal-tab <?= $auth_mode === 'login' ? 'active' : '' ?>" data-auth-tab="login">Sign in</button>
+      <button type="button" class="auth-modal-tab <?= $auth_mode === 'register' ? 'active' : '' ?>" data-auth-tab="register">Create account</button>
+      <button type="button" class="auth-modal-tab <?= $auth_mode === 'forgot' ? 'active' : '' ?>" data-auth-tab="forgot">Forgot password</button>
+    </div>
+
+    <?php if (!empty($auth_errors)): ?>
+      <div class="auth-modal-alert auth-modal-alert--error"><?= e($auth_errors[0]) ?></div>
+    <?php endif; ?>
+    <?php if ($auth_notice): ?>
+      <div class="auth-modal-alert auth-modal-alert--success"><?= e($auth_notice) ?></div>
+    <?php endif; ?>
+
+    <div class="auth-panel <?= $auth_mode === 'login' ? 'active' : '' ?>" data-auth-panel="login" aria-hidden="<?= $auth_mode === 'login' ? 'false' : 'true' ?>">
+      <h3 class="auth-modal-title">Sign in</h3>
+      <p class="auth-modal-sub">Track your OJT hours and monitor your progress.</p>
+
+      <form method="POST" action="landing.php#auth-modal" class="auth-modal-form">
+        <input type="hidden" name="auth_action" value="login" />
+        <div class="auth-modal-field">
+          <input class="auth-modal-input" type="text" name="username" placeholder="Username" value="<?= e($_POST['username'] ?? '') ?>" required />
+        </div>
+        <div class="auth-modal-field">
+          <input class="auth-modal-input" type="password" id="landing-login-pw" name="password" placeholder="Password" required />
+          <button type="button" class="auth-modal-eye" data-toggle-pw="landing-login-pw">Show</button>
+        </div>
+        <button type="submit" class="auth-modal-btn auth-modal-btn--primary">Sign in</button>
+      </form>
+    </div>
+
+    <div class="auth-panel <?= $auth_mode === 'register' ? 'active' : '' ?>" data-auth-panel="register" aria-hidden="<?= $auth_mode === 'register' ? 'false' : 'true' ?>">
+      <h3 class="auth-modal-title">Create account</h3>
+      <p class="auth-modal-sub">Set up your account and start tracking today.</p>
+
+      <?php if ($register_render_step === 1): ?>
+        <form method="POST" action="landing.php#auth-modal" class="auth-modal-form">
+          <input type="hidden" name="auth_action" value="register" />
+          <input type="hidden" name="reg_step" value="1" />
+          <div class="auth-modal-field"><input class="auth-modal-input" type="text" name="name" placeholder="Full name" value="<?= e($reg_data['name']) ?>" required /></div>
+          <div class="auth-modal-field"><input class="auth-modal-input" type="text" name="username" placeholder="Username" value="<?= e($reg_data['username']) ?>" required /></div>
+          <div class="auth-modal-field"><input class="auth-modal-input" type="number" name="required_hours" placeholder="Required OJT hours (e.g. 500)" min="1" step="0.5" value="<?= e($reg_data['required_hours']) ?>" required /></div>
+          <div class="auth-modal-field">
+            <input class="auth-modal-input" type="password" id="landing-reg-pw" name="password" placeholder="Password (min. 6 characters)" required />
+            <button type="button" class="auth-modal-eye" data-toggle-pw="landing-reg-pw">Show</button>
+          </div>
+          <button type="submit" class="auth-modal-btn auth-modal-btn--primary">Next</button>
+        </form>
+      <?php else: ?>
+        <form method="POST" action="landing.php#auth-modal" class="auth-modal-form">
+          <input type="hidden" name="auth_action" value="register" />
+          <input type="hidden" name="reg_step" value="2" />
+          <input type="hidden" name="name" value="<?= e($reg_data['name']) ?>" />
+          <input type="hidden" name="username" value="<?= e($reg_data['username']) ?>" />
+          <input type="hidden" name="required_hours" value="<?= e($reg_data['required_hours']) ?>" />
+          <input type="hidden" name="password" value="<?= e($reg_data['password']) ?>" />
+
+          <div class="auth-modal-field">
+            <select class="auth-modal-input" name="security_question" required>
+              <option value="">Select a security question</option>
+              <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+              <option value="What was the name of your first pet?">What was the name of your first pet?</option>
+              <option value="What city were you born in?">What city were you born in?</option>
+              <option value="What is your childhood nickname?">What is your childhood nickname?</option>
+              <option value="What is the name of your elementary school?">What is the name of your elementary school?</option>
+            </select>
+          </div>
+          <div class="auth-modal-field"><input class="auth-modal-input" type="text" name="security_answer" placeholder="Your answer" required /></div>
+          <button type="submit" class="auth-modal-btn auth-modal-btn--primary">Create account</button>
+          <button type="button" class="auth-modal-btn auth-modal-btn--ghost" data-auth-tab="register" data-reset-step="register">Back</button>
+        </form>
+      <?php endif; ?>
+    </div>
+
+    <div class="auth-panel <?= $auth_mode === 'forgot' ? 'active' : '' ?>" data-auth-panel="forgot" aria-hidden="<?= $auth_mode === 'forgot' ? 'false' : 'true' ?>">
+      <h3 class="auth-modal-title">Forgot password</h3>
+      <p class="auth-modal-sub">Recover your account in a few quick steps.</p>
+
+      <?php if ($forgot_render_step === 1): ?>
+        <form method="POST" action="landing.php#auth-modal" class="auth-modal-form">
+          <input type="hidden" name="auth_action" value="forgot" />
+          <input type="hidden" name="fp_step" value="1" />
+          <div class="auth-modal-field"><input class="auth-modal-input" type="text" name="fp_username" placeholder="Username" value="<?= e($fp_username) ?>" required /></div>
+          <button type="submit" class="auth-modal-btn auth-modal-btn--primary">Continue</button>
+        </form>
+      <?php elseif ($forgot_render_step === 2): ?>
+        <form method="POST" action="landing.php#auth-modal" class="auth-modal-form">
+          <input type="hidden" name="auth_action" value="forgot" />
+          <input type="hidden" name="fp_step" value="2" />
+          <input type="hidden" name="fp_username" value="<?= e($fp_username) ?>" />
+          <div class="auth-modal-question"><?= e($fp_question) ?></div>
+          <div class="auth-modal-field"><input class="auth-modal-input" type="text" name="fp_answer" placeholder="Your answer" required /></div>
+          <button type="submit" class="auth-modal-btn auth-modal-btn--primary">Verify</button>
+        </form>
+      <?php else: ?>
+        <form method="POST" action="landing.php#auth-modal" class="auth-modal-form">
+          <input type="hidden" name="auth_action" value="forgot" />
+          <input type="hidden" name="fp_step" value="3" />
+          <input type="hidden" name="fp_username" value="<?= e($fp_username) ?>" />
+          <div class="auth-modal-field">
+            <input class="auth-modal-input" type="password" id="landing-new-pw" name="new_password" placeholder="New password" required />
+            <button type="button" class="auth-modal-eye" data-toggle-pw="landing-new-pw">Show</button>
+          </div>
+          <div class="auth-modal-field">
+            <input class="auth-modal-input" type="password" id="landing-confirm-pw" name="confirm_password" placeholder="Confirm new password" required />
+            <button type="button" class="auth-modal-eye" data-toggle-pw="landing-confirm-pw">Show</button>
+          </div>
+          <button type="submit" class="auth-modal-btn auth-modal-btn--primary">Reset password</button>
+        </form>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════
      APP PREVIEW  (V2 Dashboard)
@@ -192,22 +464,15 @@ if (is_logged_in()) {
           <div class="pm-stat-card pm-stat-dark">
             <div class="pm-stat-eyebrow" style="background:rgba(255,255,255,0.3);width:80px;"></div>
             <div class="pm-stat-num" style="color:#fff;font-size:18px;">₱4,500.00 <span style="font-size:10px;font-weight:500;opacity:0.6;">Total</span></div>
-            <!-- Donut + breakdown row -->
-            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
-              <!-- Donut mock -->
-              <div style="position:relative;width:36px;height:36px;flex-shrink:0;">
-                <svg viewBox="0 0 36 36" width="36" height="36">
-                  <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="5"/>
-                  <circle cx="18" cy="18" r="14" fill="none" stroke="#52b788" stroke-width="5"
-                    stroke-dasharray="50 88" stroke-dashoffset="22" stroke-linecap="round"/>
-                </svg>
-                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;">57%</div>
+            <div class="pm-allowance-split">
+              <div class="pm-allowance-item">
+                <span class="pm-allowance-label">Used</span>
+                <span class="pm-allowance-value">₱2,550.00</span>
               </div>
-              <div>
-                <div style="font-size:7.5px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">USED</div>
-                <div style="font-size:10px;font-weight:700;color:#fff;">₱2,550.00</div>
-                <div style="font-size:7.5px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-top:3px;">REMAINING</div>
-                <div style="font-size:10px;font-weight:700;color:#fff;">₱1,950.00</div>
+              <div class="pm-allowance-divider"></div>
+              <div class="pm-allowance-item pm-allowance-item--right">
+                <span class="pm-allowance-label">Remaining</span>
+                <span class="pm-allowance-value">₱1,950.00</span>
               </div>
             </div>
           </div>
@@ -298,7 +563,7 @@ if (is_logged_in()) {
 <section class="features-section" id="features">
   <div class="section-eyebrow">Features</div>
   <h2 class="section-title">Everything you need for OJT</h2>
-  <p class="section-sub">All the tools to track, manage and analyze your internship hours — in one place.</p>
+  <p class="section-sub">All the tools to track, manage, and complete your internship hours in one place.</p>
 
   <div class="features-grid">
 
@@ -332,14 +597,6 @@ if (is_logged_in()) {
       </div>
       <div class="feature-title">Allowance Tracker</div>
       <div class="feature-desc">Set your daily allowance and automatically see how much you've earned and your projected total earnings.</div>
-    </div>
-
-    <div class="feature-card">
-      <div class="feature-icon">
-        <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-      </div>
-      <div class="feature-title">Analytics Dashboard</div>
-      <div class="feature-desc">View weekly and monthly charts, day-of-week breakdowns, and estimated completion dates based on your pace.</div>
     </div>
 
     <div class="feature-card">
@@ -390,8 +647,8 @@ if (is_logged_in()) {
     <h2 class="cta-title">Start tracking your OJT today</h2>
     <p class="cta-sub">Free to use. No setup needed. Just create an account and start logging your hours right away.</p>
     <div class="cta-btns">
-      <a href="index.php?mode=register" class="btn-cta-white">Create free account</a>
-      <a href="index.php" class="btn-cta-outline">Already have an account</a>
+      <button type="button" class="btn-cta-white" data-open-auth="register">Create free account</button>
+      <button type="button" class="btn-cta-outline" data-open-auth="login">Already have an account</button>
     </div>
   </div>
 </section>
@@ -400,11 +657,92 @@ if (is_logged_in()) {
      FOOTER
 ══════════════════════════════════════════ -->
 <footer>
-  <p>
-    &copy; <?= date('Y') ?> <strong><?= e(APP_NAME) ?></strong> &mdash;
-    Built for Filipino OJT interns
-  </p>
+  <div class="footer-grid">
+    <div class="footer-item footer-item--left">Copyright <?= date('Y') ?>, <?= e(APP_NAME) ?></div>
+    <div class="footer-item footer-item--center"><strong>Joaquin Miguel Dumas</strong>, Computer Engineer - Web / UI / Product</div>
+    <div class="footer-item footer-item--right">Made with &hearts; in the Philippines</div>
+  </div>
 </footer>
+
+<script>
+  (function () {
+    const modal = document.getElementById('auth-modal');
+    if (!modal) return;
+
+    const openButtons = document.querySelectorAll('[data-open-auth]');
+    const closeButtons = document.querySelectorAll('[data-close-auth]');
+    const tabs = document.querySelectorAll('[data-auth-tab]');
+    const panels = document.querySelectorAll('[data-auth-panel]');
+    const initialMode = modal.getAttribute('data-initial-mode') || 'login';
+
+    function setAuthTab(mode) {
+      tabs.forEach(tab => {
+        tab.classList.toggle('active', tab.getAttribute('data-auth-tab') === mode);
+      });
+      panels.forEach(panel => {
+        const active = panel.getAttribute('data-auth-panel') === mode;
+        panel.classList.toggle('active', active);
+        panel.setAttribute('aria-hidden', active ? 'false' : 'true');
+      });
+    }
+
+    function openAuth(mode) {
+      setAuthTab(mode || initialMode);
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeAuth() {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, document.title, 'landing.php');
+      }
+    }
+
+    openButtons.forEach(btn => {
+      btn.addEventListener('click', function () {
+        openAuth(this.getAttribute('data-open-auth'));
+      });
+    });
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function () {
+        setAuthTab(this.getAttribute('data-auth-tab'));
+      });
+    });
+
+    document.querySelectorAll('[data-reset-step="register"]').forEach(btn => {
+      btn.addEventListener('click', function () {
+        window.location.href = 'landing.php?auth=register#auth-modal';
+      });
+    });
+
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', closeAuth);
+    });
+
+    modal.addEventListener('click', function (e) {
+      if (e.target.classList.contains('auth-modal-backdrop')) closeAuth();
+    });
+
+    document.querySelectorAll('[data-toggle-pw]').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const input = document.getElementById(this.getAttribute('data-toggle-pw'));
+        if (!input) return;
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        this.textContent = isPassword ? 'Hide' : 'Show';
+      });
+    });
+
+    setAuthTab(initialMode);
+    if (modal.classList.contains('open') || window.location.hash === '#auth-modal') {
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+  })();
+</script>
 
 </body>
 </html>
