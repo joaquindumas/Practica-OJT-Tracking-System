@@ -1,6 +1,9 @@
 <?php
 define('APP_NAME', 'Practica');
 
+// Use PH local time for greetings, logs, and date displays across all pages.
+date_default_timezone_set('Asia/Manila');
+
 // ── Database config ───────────────────────────────────────────
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'ojt_tracker');
@@ -42,7 +45,7 @@ function get_user(string $username): ?array {
     // Attach logs
     $user['logs']           = get_logs($user['id']);
     $user['required_hours'] = (float) $user['required_hours'];
-    $user['allowance_per_day'] = (float) ($user['allowance_per_day'] ?? 150);
+    $user['allowance_per_day'] = (float) ($user['allowance_per_day'] ?? 0);
     return $user;
 }
 
@@ -75,7 +78,7 @@ function save_user(array $user): void {
             $user['name'],
             $user['password'],
             $user['required_hours'] ?? 500,
-            $user['allowance_per_day'] ?? 150,
+            $user['allowance_per_day'] ?? 0,
             $user['security_question'] ?? null,
             $user['security_answer']   ?? null,
             $user['email']             ?? null,
@@ -91,7 +94,7 @@ function save_user(array $user): void {
             $user['username'],
             $user['password'],
             $user['required_hours']    ?? 500,
-            $user['allowance_per_day'] ?? 150,
+            $user['allowance_per_day'] ?? 0,
             $user['security_question'] ?? null,
             $user['security_answer']   ?? null,
             $user['email']             ?? null,

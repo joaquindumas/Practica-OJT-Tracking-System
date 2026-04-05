@@ -38,14 +38,17 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
  * Horizontal uses clamp so it narrows on mobile, widens on desktop.
  */
 .dash-wrap {
-    padding: 1.25rem clamp(1rem, 3vw, 2rem);
-    width: 100%;
-    box-sizing: border-box;
-    position: relative;
+    background-color: #faf7f2;
+    padding-top: 2%;
+    min-height: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ── PAGE HEADER ── */
-.page-header {
+.page-header,
+.dash-hero.logs-hero {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -55,10 +58,30 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     flex-wrap: wrap;
     gap: 1rem; /* was 16px — 1rem = fluid root size */
 }
-.page-title-group { display: flex; flex-direction: column; gap: 2px; flex: 0 0 auto; }
+.dash-hero.logs-hero {
+    padding: 2rem 2.5rem;
+    background: #ffffff;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 1rem;
+    row-gap: 1rem;
+}
+
+.page-title-group,
+.logs-hero-content { display: flex; flex-direction: column; gap: 2px; flex: 0 0 auto; }
+
+.logs-hero-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
 
 /* was: font-size: var(--text-xs) — keeping theme vars but note they should also use rem */
-.page-eyebrow {
+.page-eyebrow,
+.dash-hero-eyebrow {
     font-size: clamp(0.65rem, 1vw, 0.75rem); /* fluid between 10px–12px */
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -66,13 +89,15 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     color: #2d6a4f;
     margin: 0 0 2px 0;
 }
-.page-subtitle {
+.page-subtitle,
+.dash-hero-sub.logs-hero-sub {
     font-size: clamp(0.8rem, 1.2vw, 0.875rem); /* fluid: ~13–14px */
     color: #64748b;
     font-weight: 400;
     margin: 4px 0 0 0;
 }
-.page-title {
+.page-title,
+.dash-hero-title.logs-hero-title {
     display: flex;
     align-items: center;
     gap: 0.5rem; /* was 8px */
@@ -85,13 +110,30 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     letter-spacing: -0.03em;
 }
 .page-title-icon { font-size: 0.85em; } /* em = relative to .page-title's font-size ✓ */
-.page-actions {
+.page-actions,
+.dash-hero-actions.logs-hero-actions {
     display: flex;
     gap: 0.625rem;
     align-items: center;
     flex-shrink: 0;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     margin-top: 4px;
+    margin-left: auto;
+    justify-self: end;
+}
+
+@media (max-width: 1120px) {
+    .dash-hero.logs-hero {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+    }
+
+    .dash-hero-actions.logs-hero-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-self: start;
+        flex-wrap: wrap;
+    }
 }
 
 /* ── BUTTONS ── */
@@ -519,9 +561,13 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 
 /* ── RESPONSIVE BREAKPOINTS ── */
 @media (max-width: 768px) {
-    .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-    .page-actions { width: 100%; flex-wrap: nowrap; margin-top: 0; }
-    .page-actions .btn { flex: 1; justify-content: center; }
+    .page-header,
+    .dash-hero.logs-hero { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .dash-hero.logs-hero { padding: 1.5rem; }
+    .page-actions,
+    .dash-hero-actions.logs-hero-actions { width: 100%; flex-wrap: nowrap; margin-top: 0; }
+    .page-actions .btn,
+    .dash-hero-actions.logs-hero-actions .btn { flex: 1; justify-content: center; }
 
     .new-cal-grid {
         grid-template-rows: auto repeat(6, minmax(4rem, 1fr));
@@ -530,17 +576,19 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 
 /* When buttons are tight — hide text, show icon only */
 @media (max-width: 480px) {
-    .page-actions .btn-label { display: none; }
-    .page-actions .btn { padding: 0.6em; flex: 0 0 auto; }
-    .page-actions .btn svg { width: 18px; height: 18px; }
-    .page-actions { gap: 0.5rem; }
+    .page-actions .btn-label,
+    .dash-hero-actions.logs-hero-actions .btn-label { display: none; }
+    .page-actions .btn,
+    .dash-hero-actions.logs-hero-actions .btn { padding: 0.6em; flex: 0 0 auto; }
+    .page-actions .btn svg,
+    .dash-hero-actions.logs-hero-actions .btn svg { width: 18px; height: 18px; }
+    .page-actions,
+    .dash-hero-actions.logs-hero-actions { gap: 0.5rem; }
 }
 
 /* Mid range — show short labels */
 @media (min-width: 481px) and (max-width: 640px) {
-    .page-actions .btn-label { display: inline; }
+    .page-actions .btn-label,
+    .dash-hero-actions.logs-hero-actions .btn-label { display: inline; }
 }
 
-@media (min-width: 1400px) {
-    .dash-wrap { max-width: 1600px; margin: 0 auto; }
-}

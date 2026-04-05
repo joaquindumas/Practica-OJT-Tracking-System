@@ -73,15 +73,16 @@ include 'includes/header.php';
 
 <link rel="stylesheet" href="css/logs.css">
 
+<div class="content">
 <div class="dash-wrap">
     
-    <div class="page-header">
-        <div class="page-title-group">
-            <p class="page-eyebrow">OJT HOURS</p>
-            <h1 class="page-title">Time Logs <span class="page-title-icon">🕓</span></h1>
-            <p class="page-subtitle">Track and manage your daily on-the-job training hours.</p>
+    <div class="dash-hero logs-hero">
+        <div class="dash-hero-content logs-hero-content">
+            <div class="dash-hero-eyebrow">OJT HOURS</div>
+            <h1 class="dash-hero-title logs-hero-title">Time Logs <span class="page-title-icon">🕓</span></h1>
+            <p class="dash-hero-sub logs-hero-sub">Track and manage your daily on-the-job training hours.</p>
         </div>
-        <div class="page-actions">
+        <div class="dash-hero-actions logs-hero-actions">
             <button type="button" class="btn btn-outline" id="view-toggle-btn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <span class="btn-label">View Calendar</span>
@@ -193,6 +194,7 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
+</div>
 
 <div class="floating-action-bar" id="bulk-delete-bar">
     <span class="selected-count" id="bulk-delete-count">0 selected</span>
@@ -256,11 +258,11 @@ include 'includes/header.php';
 </div>
 
 <div class="modal-overlay" id="bulk-modal">
-  <div class="modal-card" style="max-width:min(520px, 95vw);"><!-- was max-width:520px — now respects small screens -->
+  <div class="modal-card" style="max-width:min(520px, 92vw); width:100%; box-sizing:border-box;">
     <div class="modal-title-serif">Bulk Entry</div>
     <div class="modal-subtitle">Fill past days automatically. Already-logged days are skipped.</div>
     <form method="POST" action="logs.php"><input type="hidden" name="action" value="bulk_log" />
-      <div style="display:grid;grid-template-columns:1fr 1fr 5.625rem;gap:0.75rem;margin-bottom:1.25rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr minmax(4.5rem, 5.625rem);gap:0.5rem;margin-bottom:1.25rem;">
         <div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="date" name="bulk_start" id="bulk-start" required /></div>
         <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="date" name="bulk_end" id="bulk-end" required /></div>
         <div class="form-group" style="margin:0;"><label class="form-label-styled">Hrs/Day</label><input class="form-input-styled" type="number" name="bulk_hrs" id="bulk-hrs" value="8" min="0.5" max="24" step="0.5" required /></div>

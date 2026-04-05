@@ -40,9 +40,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$user = current_user(); $all_logs = $user['logs'] ?? []; $logged = total_logged($user); $required = $user['required_hours'] ?? 500; $remaining = hours_remaining($user); $pct = completion_percent($user); $est_date = estimated_completion($user); $est_basis = estimated_basis($user); $allowance = $user['allowance_per_day'] ?? 150;
+$user = current_user(); $all_logs = $user['logs'] ?? []; $logged = total_logged($user); $required = $user['required_hours'] ?? 500; $remaining = hours_remaining($user); $pct = completion_percent($user); $est_date = estimated_completion($user); $est_basis = estimated_basis($user); $allowance = $user['allowance_per_day'] ?? 0;
 usort($all_logs, fn($a, $b) => strtotime($b['date']) - strtotime($a['date'])); $recent_logs = array_slice($all_logs, 0, 4);
 $total_days = count(array_unique(array_column($all_logs, 'date'))); $avg_hrs_day = $total_days > 0 ? round($logged / $total_days, 1) : 0; $projected_days = $avg_hrs_day > 0 ? (int) ceil($remaining / $avg_hrs_day) : 0;
+
+
+// Greeting + day counter
+$hour = (int) date('H');
+$greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
+
+$ojt_start = null;
+if (!empty($all_logs)) {
+    $dates = array_column($all_logs, 'date');
+    sort($dates);
+    $ojt_start = $dates[0];
+}
+$day_count = $total_days;
 
 include 'includes/header.php';
 ?>
@@ -52,20 +65,18 @@ include 'includes/header.php';
   <div class="dash-hero">
     <div class="dash-hero-content">
       <div class="dash-hero-eyebrow">Overview</div>
-      <h1 class="dash-hero-title">Welcome back, <?= e(explode(' ', $user['name'] ?? $user['username'])[0]) ?> 👋</h1>
-      <p class="dash-hero-sub">Track and manage your daily internship progress.</p>
+      <h1 class="dash-hero-title"><?= $greeting ?>, <?= e(explode(' ', $user['name'] ?? $user['username'])[0]) ?> 👋</h1>
+      <div class="dash-day-counter">
+  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+  Day <?= $total_days ?> of OJT &nbsp;·&nbsp; <?= date('D, M j, Y') ?>
+</div>
     </div>
-    <div class="dash-hero-actions">
-      <button class="btn dash-btn-ghost" id="open-bulk-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-        Bulk Log
-      </button>
-      <button class="btn dash-btn-solid" id="open-modal-btn">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="icon-sm"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        New Log Entry
-      </button>
-    </div>
-
+  <div class="dash-hero-actions">
+  <button class="btn dash-btn-solid" id="open-modal-btn">
+    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+    New Log Entry
+  </button>
+</div>
   </div>
 
   <?php
@@ -107,33 +118,19 @@ include 'includes/header.php';
       <div class="dash-stat-eyebrow">Allowance Summary</div>
       <div class="dash-stat-num">₱<?= number_format($total_projected, 2) ?> <span class="dash-stat-denom">Total</span></div>
       
-      <div class="allowance-graph-container">
-        <div class="allowance-chart" style="background: conic-gradient(#6ee7b7 <?= $allowance_pct ?>%, rgba(255,255,255,0.1) 0);">
-          <div class="allowance-chart-inner">
-            <span><?= round($allowance_pct) ?>%</span>
-          </div>
-        </div>
-        
-        <div class="allowance-legend">
-          <div class="legend-item">
-            <span class="legend-dot used"></span>
-            <div class="legend-details">
-              <span class="legend-label">Used</span>
-              <span class="legend-value">₱<?= number_format($total_allowance, 2) ?></span>
-            </div>
-          </div>
-          <div class="legend-item">
-            <span class="legend-dot rem"></span>
-            <div class="legend-details">
-              <span class="legend-label">Remaining</span>
-              <span class="legend-value">₱<?= number_format($remaining_allowance, 2) ?></span>
-            </div>
-          </div>
-        </div>
+  <div class="allowance-split">
+  <div class="allowance-split-item">
+    <span class="allowance-split-label">Used</span>
+    <span class="allowance-split-value">₱<?= number_format($total_allowance, 2) ?></span>
+  </div>
+  <div class="allowance-split-divider"></div>
+  <div class="allowance-split-item">
+    <span class="allowance-split-label">Remaining</span>
+    <span class="allowance-split-value">₱<?= number_format($remaining_allowance, 2) ?></span>
+  </div>
+</div>
       </div>
     </div>
-
-  </div>
 
   <div class="dash-body">
     <div class="dash-left">

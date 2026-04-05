@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update_profile') {
         $name       = trim($_POST['name'] ?? '');
         $req_hrs    = (float) ($_POST['required_hours'] ?? 0);
-        $allowance  = (float) ($_POST['allowance_per_day'] ?? 150);
+        $allowance  = (float) ($_POST['allowance_per_day'] ?? 0);
         
         if (!$name) {
             $profile_errors[] = 'Name cannot be empty.';
@@ -93,6 +93,8 @@ include 'includes/header.php';
 .settings-card { background: #ffffff; border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 1.5rem; }
 .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; } 
 .settings-col { display: flex; flex-direction: column; }
+.settings-lower-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+.settings-lower-grid .settings-card { margin-bottom: 0; max-width: none !important; }
 
 /* ── TYPOGRAPHY & FORMS ── */
 .settings-section-title { font-family: 'Inter', sans-serif !important; font-size: var(--text-lg); font-weight: 800; color: var(--text); margin: 0 0 1rem 0; letter-spacing: -0.02em; }
@@ -125,8 +127,9 @@ select.form-input-styled { appearance: none; background-image: url("data:image/s
 @media (max-width: 1024px) { .settings-grid { gap: 2rem; } }
 @media (max-width: 768px) {
     .settings-wrap { padding: 1rem 1rem 0 1rem; height: auto; overflow: visible; }
-    .settings-scroll-area { overflow-y: visible; padding-right: 0; }
+    .settings-scroll-area { overflow-y: visible; padding-right: 0; padding-bottom: 2rem; }
     .settings-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .settings-lower-grid { grid-template-columns: 1fr; gap: 1.25rem; }
     .form-row-2 { grid-template-columns: 1fr; gap: 1rem; }
     .settings-divider { margin: 1.5rem 0; display: none; } 
     .btn-save-profile { margin-top: 1rem; }
@@ -177,7 +180,7 @@ select.form-input-styled { appearance: none; background-image: url("data:image/s
                         </div>
                         <div>
                             <label class="form-label-styled">Daily Allowance (₱)</label>
-                            <input class="form-input-styled" type="number" name="allowance_per_day" step="0.01" value="<?= e($user['allowance_per_day'] ?? 150.00) ?>" />
+                            <input class="form-input-styled" type="number" name="allowance_per_day" step="0.01" value="<?= e($user['allowance_per_day'] ?? 0.00) ?>" />
                         </div>
                     </div>
                 </div>
@@ -219,49 +222,64 @@ select.form-input-styled { appearance: none; background-image: url("data:image/s
             </div>
         </form>
 
-        <form method="POST" action="settings.php" class="settings-card" style="max-width: 600px;">
-            <input type="hidden" name="action" value="change_password" />
-            
-            <h2 class="settings-section-title">Change Password</h2>
-            <div class="page-subtitle" style="margin-bottom: 1.5rem;">Update your account password to keep it secure.</div>
+        <div class="settings-lower-grid">
+            <form method="POST" action="settings.php" class="settings-card">
+                <input type="hidden" name="action" value="change_password" />
+                
+                <h2 class="settings-section-title">Change Password</h2>
+                <div class="page-subtitle" style="margin-bottom: 1.5rem;">Update your account password to keep it secure.</div>
 
-            <?php foreach ($password_errors as $err): ?>
-                <div class="error-banner"><?= e($err) ?></div>
-            <?php endforeach; ?>
+                <?php foreach ($password_errors as $err): ?>
+                    <div class="error-banner"><?= e($err) ?></div>
+                <?php endforeach; ?>
 
-            <div class="form-row-1">
-                <label class="form-label-styled">Current Password</label>
-                <div class="password-wrapper">
-                    <input class="form-input-styled" type="password" id="cur-pass" name="current_password" placeholder="Enter current password" required />
-                    <button type="button" class="password-toggle-btn" onclick="togglePassword('cur-pass', this)" title="Show/Hide">
-                        <svg class="eye-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="form-row-2">
-                <div>
-                    <label class="form-label-styled">New Password</label>
+                <div class="form-row-1">
+                    <label class="form-label-styled">Current Password</label>
                     <div class="password-wrapper">
-                        <input class="form-input-styled" type="password" id="new-pass" name="new_password" placeholder="Min. 6 characters" required />
-                        <button type="button" class="password-toggle-btn" onclick="togglePassword('new-pass', this)" title="Show/Hide">
+                        <input class="form-input-styled" type="password" id="cur-pass" name="current_password" placeholder="Enter current password" required />
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('cur-pass', this)" title="Show/Hide">
                             <svg class="eye-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </button>
                     </div>
                 </div>
-                <div>
-                    <label class="form-label-styled">Confirm New Password</label>
-                    <div class="password-wrapper">
-                        <input class="form-input-styled" type="password" id="conf-pass" name="confirm_password" placeholder="Repeat new password" required />
-                        <button type="button" class="password-toggle-btn" onclick="togglePassword('conf-pass', this)" title="Show/Hide">
-                            <svg class="eye-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </button>
+                
+                <div class="form-row-2">
+                    <div>
+                        <label class="form-label-styled">New Password</label>
+                        <div class="password-wrapper">
+                            <input class="form-input-styled" type="password" id="new-pass" name="new_password" placeholder="Min. 6 characters" required />
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('new-pass', this)" title="Show/Hide">
+                                <svg class="eye-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label-styled">Confirm New Password</label>
+                        <div class="password-wrapper">
+                            <input class="form-input-styled" type="password" id="conf-pass" name="confirm_password" placeholder="Repeat new password" required />
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('conf-pass', this)" title="Show/Hide">
+                                <svg class="eye-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <button type="submit" class="btn-save-profile" style="margin-top: 0.5rem;">Update Password</button>
-        </form>
+                <button type="submit" class="btn-save-profile" style="margin-top: 0.5rem;">Update Password</button>
+            </form>
+
+            <!-- Danger Zone / Logout -->
+            <div class="settings-card" style="border-color: #fecaca;">
+                <h2 class="settings-section-title" style="color:#dc2626;">Danger Zone</h2>
+                <div class="page-subtitle" style="margin-bottom: 1.25rem;">Sign out of your account on this device.</div>
+                <a href="logout.php" 
+                   onclick="return confirm('Are you sure you want to log out?')"
+                   style="display:inline-block; padding: 11px 24px; background: transparent; color: #dc2626; border: 1.5px solid #dc2626; border-radius: 8px; font-weight: 700; font-size: 13px; text-decoration: none; transition: background 0.15s;"
+                   onmouseover="this.style.background='#fff5f5'"
+                   onmouseout="this.style.background='transparent'">
+                    Log Out
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
