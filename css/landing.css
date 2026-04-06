@@ -32,13 +32,14 @@
   --radius-xl:    28px;
 }
 
-html { scroll-behavior: smooth; }
+html { scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; }
 
 body {
   font-family: 'DM Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -148,6 +149,7 @@ a { text-decoration: none; color: inherit; }
   max-width: 820px;
   margin: 0 auto;
   position: relative;
+  overflow: hidden;
 }
 
 /* Decorative soft radial glow behind hero */

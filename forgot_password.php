@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user['password'] = hash_password($new_pw);
             save_user($user);
             set_flash('success', 'Password reset successfully! Please log in.');
-            header('Location: index.php');
+            header('Location: auth.php');
             exit;
         }
     }
@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <div class="auth-toggle">
-      <a href="index.php">← Back to login</a>
+      <a href="auth.php">← Back to login</a>
     </div>
 
   </div>

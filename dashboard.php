@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$user = current_user(); $all_logs = $user['logs'] ?? []; $logged = total_logged($user); $required = $user['required_hours'] ?? 500; $remaining = hours_remaining($user); $pct = completion_percent($user); $est_date = estimated_completion($user); $est_basis = estimated_basis($user); $allowance = $user['allowance_per_day'] ?? 0;
+$user = current_user(); $all_logs = $user['logs'] ?? []; $logged = total_logged($user); $required = $user['required_hours'] ?? DEFAULT_REQUIRED_HOURS; $remaining = hours_remaining($user); $pct = completion_percent($user); $est_date = estimated_completion($user); $est_basis = estimated_basis($user); $allowance = $user['allowance_per_day'] ?? 0;
 usort($all_logs, fn($a, $b) => strtotime($b['date']) - strtotime($a['date'])); $recent_logs = array_slice($all_logs, 0, 4);
 $total_days = count(array_unique(array_column($all_logs, 'date'))); $avg_hrs_day = $total_days > 0 ? round($logged / $total_days, 1) : 0; $projected_days = $avg_hrs_day > 0 ? (int) ceil($remaining / $avg_hrs_day) : 0;
 
@@ -116,17 +116,17 @@ include 'includes/header.php';
 
     <div class="dash-stat-card dash-stat-card--allowance">
       <div class="dash-stat-eyebrow">Allowance Summary</div>
-      <div class="dash-stat-num">₱<?= number_format($total_projected, 2) ?> <span class="dash-stat-denom">Total</span></div>
+      <div class="dash-stat-num"><?= get_currency_symbol($user['currency']) ?><?= number_format($total_projected, 2) ?> <span class="dash-stat-denom">Total</span></div>
       
   <div class="allowance-split">
   <div class="allowance-split-item">
     <span class="allowance-split-label">Used</span>
-    <span class="allowance-split-value">₱<?= number_format($total_allowance, 2) ?></span>
+    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($total_allowance, 2) ?></span>
   </div>
   <div class="allowance-split-divider"></div>
   <div class="allowance-split-item">
     <span class="allowance-split-label">Remaining</span>
-    <span class="allowance-split-value">₱<?= number_format($remaining_allowance, 2) ?></span>
+    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($remaining_allowance, 2) ?></span>
   </div>
 </div>
       </div>
@@ -273,11 +273,11 @@ include 'includes/header.php';
     <div class="modal-title-serif">Bulk Entry</div>
     <div class="modal-subtitle">Fill past days automatically. Already-logged days are skipped.</div>
     <form method="POST" action="dashboard.php"><input type="hidden" name="action" value="bulk_log" />
-      <div style="display:grid;grid-template-columns:1fr 1fr 5.625rem;gap:0.75rem;margin-bottom:1.25rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
         <div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="date" name="bulk_start" id="bulk-start" required /></div>
         <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="date" name="bulk_end" id="bulk-end" required /></div>
-        <div class="form-group" style="margin:0;"><label class="form-label-styled">Hrs/Day</label><input class="form-input-styled" type="number" name="bulk_hrs" id="bulk-hrs" value="8" min="0.5" max="24" step="0.5" required /></div>
       </div>
+      <div class="form-group" style="margin-bottom:1.25rem;"><label class="form-label-styled">Hrs/Day</label><input class="form-input-styled" type="number" name="bulk_hrs" id="bulk-hrs" value="8" min="0.5" max="24" step="0.5" required /></div>
       <input type="hidden" name="bulk_from" value="08:00" /><input type="hidden" name="bulk_to" id="bulk-to-hidden" value="16:00" />
       <div class="form-group" style="margin-bottom:1.25rem;">
         <label class="form-label-styled" style="margin-bottom:0.625rem;">Exclude Days <span style="color:#888;font-weight:500;text-transform:none;">(SELECTED = SKIP)</span></label>

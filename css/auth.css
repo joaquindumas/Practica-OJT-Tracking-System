@@ -45,13 +45,13 @@ body {
 
 .auth-card {
   background: var(--surface);
-  border-radius: 20px;
-  padding: 2.5rem 2.25rem;
+  border-radius: 24px;
+  padding: 2rem 1.75rem;
   width: 100%;
-  max-width: 420px;
-  margin: 0 1rem;
-  border: 1px solid var(--border2);
-  box-shadow: var(--shadow-lg);
+  max-width: 380px;
+  margin: 2rem auto;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 25px 70px rgba(15, 23, 42, 0.08);
   position: relative;
   z-index: 1;
   box-sizing: border-box; /* CRITICAL: Stops card from blowing out */
@@ -60,8 +60,8 @@ body {
 .auth-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 2rem;
+  gap: 12px;
+  margin-bottom: 1.6rem;
   justify-content: center;
 }
 
@@ -87,6 +87,85 @@ body {
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--text);
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.auth-tab {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: var(--surface2);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.85rem 0.9rem;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.auth-tab:hover {
+  background: rgba(45, 106, 79, 0.08);
+}
+
+.auth-tab.active {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+  box-shadow: 0 14px 28px rgba(45, 106, 79, 0.15);
+}
+
+.auth-panel {
+  display: none;
+}
+
+.auth-panel.active {
+  display: block;
+}
+
+.auth-alert {
+  margin-bottom: 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.auth-alert--error {
+  background: rgba(254, 226, 226, 0.95);
+  color: #991b1b;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.auth-alert--success {
+  background: rgba(220, 252, 231, 0.95);
+  color: #166534;
+  border: 1px solid rgba(134, 239, 172, 0.35);
+}
+
+.auth-group {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  align-items: center;
+}
+
+.auth-group .auth-input,
+.auth-group .auth-select {
+  width: 100%;
+}
+
+.auth-group .auth-select {
+  min-width: 110px;
 }
 
 .auth-welcome {
@@ -124,7 +203,7 @@ body {
 
 .auth-field {
   position: relative;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   text-align: left;
   width: 100%;
   box-sizing: border-box;
@@ -149,7 +228,7 @@ body {
 .auth-input {
   width: 100%;
   box-sizing: border-box; /* CRITICAL: Keeps padding inside the input */
-  padding: 11px 14px 11px 38px;
+  padding: 11px 14px;
   border: 1.5px solid var(--border2);
   border-radius: var(--radius-sm);
   font-family: 'DM Sans', sans-serif;

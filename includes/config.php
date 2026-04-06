@@ -1,6 +1,9 @@
 <?php
 define('APP_NAME', 'Practica');
 
+// Default values
+define('DEFAULT_REQUIRED_HOURS', 500);
+
 // Use PH local time for greetings, logs, and date displays across all pages.
 date_default_timezone_set('Asia/Manila');
 
@@ -46,16 +49,7 @@ function get_user(string $username): ?array {
     $user['logs']           = get_logs($user['id']);
     $user['required_hours'] = (float) $user['required_hours'];
     $user['allowance_per_day'] = (float) ($user['allowance_per_day'] ?? 0);
-    return $user;
-}
-
-function get_user_by_id(int $id): ?array {
-    $stmt = db()->prepare('SELECT * FROM users WHERE id = ?');
-    $stmt->execute([$id]);
-    $user = $stmt->fetch();
-    if (!$user) return null;
-    $user['logs']           = get_logs($user['id']);
-    $user['required_hours'] = (float) $user['required_hours'];
+    $user['currency']       = $user['currency'] ?? 'PHP';
     return $user;
 }
 
@@ -69,6 +63,7 @@ function save_user(array $user): void {
                 password          = ?,
                 required_hours    = ?,
                 allowance_per_day = ?,
+                currency          = ?,
                 security_question = ?,
                 security_answer   = ?,
                 email             = ?
@@ -77,8 +72,9 @@ function save_user(array $user): void {
         $stmt->execute([
             $user['name'],
             $user['password'],
-            $user['required_hours'] ?? 500,
+            $user['required_hours'] ?? DEFAULT_REQUIRED_HOURS,
             $user['allowance_per_day'] ?? 0,
+            $user['currency'] ?? 'PHP',
             $user['security_question'] ?? null,
             $user['security_answer']   ?? null,
             $user['email']             ?? null,
@@ -86,20 +82,32 @@ function save_user(array $user): void {
         ]);
     } else {
         $stmt = $db->prepare('
-            INSERT INTO users (name, username, password, required_hours, allowance_per_day, security_question, security_answer, email)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, username, password, required_hours, allowance_per_day, currency, security_question, security_answer, email)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         $stmt->execute([
             $user['name'],
             $user['username'],
             $user['password'],
-            $user['required_hours']    ?? 500,
+            $user['required_hours']    ?? DEFAULT_REQUIRED_HOURS,
             $user['allowance_per_day'] ?? 0,
+            $user['currency']          ?? 'PHP',
             $user['security_question'] ?? null,
             $user['security_answer']   ?? null,
             $user['email']             ?? null,
         ]);
     }
+}
+
+// ── Currency helpers ───────────────────────────────────────────
+function get_currency_symbol(string $currency): string {
+    return match ($currency) {
+        'USD' => '$',
+        'EUR' => '€',
+        'GBP' => '£',
+        'PHP' => '₱',
+        default => '₱',
+    };
 }
 
 // ── Log helpers ───────────────────────────────────────────────
@@ -172,7 +180,7 @@ function current_user(): ?array {
 }
 
 function require_login(): void {
-    if (!is_logged_in()) { header('Location: index.php'); exit; }
+    if (!is_logged_in()) { header('Location: auth.php'); exit; }
 }
 
 function require_guest(): void {
@@ -204,11 +212,11 @@ function total_logged(array $user): float {
 }
 
 function hours_remaining(array $user): float {
-    return max(0, ($user['required_hours'] ?? 500) - total_logged($user));
+    return max(0, ($user['required_hours'] ?? DEFAULT_REQUIRED_HOURS) - total_logged($user));
 }
 
 function completion_percent(array $user): float {
-    $req = $user['required_hours'] ?? 500;
+    $req = $user['required_hours'] ?? DEFAULT_REQUIRED_HOURS;
     if ($req <= 0) return 100;
     return min(100, (total_logged($user) / $req) * 100);
 }
