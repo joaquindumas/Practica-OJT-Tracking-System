@@ -213,7 +213,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 .new-cal-nav { display: flex; align-items: center; gap: 0.5rem; }
 
 /* was: width/height 32px — switching to em so it scales with font */
-.new-cal-nav a {
+.new-cal-nav a:not(.btn-today) {
     width: 2em;
     height: 2em;
     display: flex;
@@ -226,7 +226,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     transition: 0.15s;
     font-size: clamp(0.875rem, 1.2vw, 1rem); /* controls the 2em size */
 }
-.new-cal-nav a:hover { background: #f8fafc; border-color: #cbd5e1; color: var(--text); }
+.new-cal-nav a:not(.btn-today):hover { background: #f8fafc; border-color: #cbd5e1; color: var(--text); }
 
 .new-cal-wrapper { overflow-x: auto; padding-bottom: 4px; }
 
@@ -558,8 +558,111 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 .day-toggle:hover { border-color: #cbd5e1; }
 .day-toggle--excluded { border-color: #ef4444; color: #ef4444; background: white; }
 
+/* Tutorial walkthrough */
+.tutorial-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1190;
+    display: none;
+}
+
+.tutorial-overlay.open {
+    display: block;
+}
+
+.tutorial-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.58);
+}
+
+.tutorial-card {
+    position: fixed;
+    z-index: 1205;
+    background: #ffffff;
+    border: 1px solid #dbe2ea;
+    border-radius: 0.9rem;
+    box-shadow: 0 24px 38px rgba(2, 6, 23, 0.28);
+    padding: 1rem;
+    max-width: min(380px, calc(100vw - 24px));
+}
+
+.tutorial-step-count {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.tutorial-step-title {
+    margin: 0;
+    font-size: 1rem;
+    color: #0f172a;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.tutorial-step-body {
+    margin: 0.7rem 0 0;
+    font-size: 0.82rem;
+    color: #334155;
+    line-height: 1.45;
+}
+
+.tutorial-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+.tutorial-actions .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.tutorial-focus {
+    position: relative;
+    z-index: 1210;
+    border-radius: 0.65rem;
+}
+
+.tutorial-focus--strong {
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.42), 0 0 0 8px rgba(255, 255, 255, 0.25), 0 8px 24px rgba(15, 23, 42, 0.28);
+}
+
+@media (max-width: 768px) {
+    .tutorial-card {
+        left: 12px !important;
+        right: 12px;
+        width: auto !important;
+        top: auto !important;
+        bottom: 12px;
+        transform: none !important;
+    }
+
+    .tutorial-actions {
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tutorial-focus,
+    .tutorial-card {
+        transition: none !important;
+    }
+}
+
 /* ── RESPONSIVE BREAKPOINTS ── */
 @media (max-width: 768px) {
+    html.quick-log-open,
+    body.quick-log-open {
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
     .page-header,
     .dash-hero.logs-hero { flex-direction: column; align-items: flex-start; gap: 1rem; }
     .dash-hero.logs-hero { padding: 1.5rem; }
@@ -569,7 +672,341 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     .dash-hero-actions.logs-hero-actions .btn { flex: 1; justify-content: center; }
 
     .new-cal-grid {
-        grid-template-rows: auto repeat(6, minmax(4rem, 1fr));
+        min-width: 560px;
+        grid-template-rows: auto repeat(6, minmax(4.8rem, 1fr));
+        border-color: #eaf0f6;
+    }
+
+    .new-cal-card {
+        border-radius: 1.1rem;
+        padding: 0.95rem 0.78rem 0.82rem;
+    }
+
+    .new-cal-header {
+        margin-bottom: 0.8rem;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .new-cal-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .new-cal-nav {
+        margin-left: auto;
+        gap: 0.35rem;
+    }
+
+    .new-cal-nav a:not(.btn-today) {
+        width: 2.05rem;
+        height: 2.05rem;
+        font-size: 0.86rem;
+    }
+
+    .btn-today {
+        height: 2.05rem;
+        min-width: 3.4rem;
+        padding: 0 0.78rem;
+        font-size: 0.75rem;
+        line-height: 1;
+        border-radius: 999px;
+    }
+
+    .new-cal-wrapper {
+        margin: 0 -0.08rem;
+        padding-bottom: 0.35rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scroll-padding-inline: 0.08rem;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x pan-y;
+    }
+
+    .new-cal-wrapper::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .new-cal-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.45);
+        border-radius: 999px;
+    }
+
+    .new-cal-grid {
+        scroll-snap-align: start;
+    }
+
+    .new-cal-dow {
+        padding: 0.45rem 0.2rem;
+        font-size: 0.56rem;
+        letter-spacing: 0.07em;
+        background: #f7fafd;
+        border-bottom-color: #eaf0f6;
+        color: #5f7189;
+    }
+
+    .new-cal-cell {
+        padding: 0.32rem;
+        overflow: hidden;
+        border-right-color: #edf2f7;
+        border-bottom-color: #edf2f7;
+        background: #ffffff;
+    }
+
+    .new-cal-cell:hover {
+        background: #fbfdff;
+    }
+
+    .new-cal-date-row {
+        margin-bottom: 0.3rem !important;
+        align-items: center !important;
+    }
+
+    .new-cal-date {
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+
+    .new-cal-cell .custom-checkbox {
+        width: 0.95rem;
+        height: 0.95rem;
+        border-width: 1.5px;
+    }
+
+    .pill-logged {
+        font-size: 0.61rem;
+        padding: 0.18rem 0.32rem;
+        border-left-width: 2px;
+        border-radius: 0.33rem;
+    }
+
+    .list-table-wrap {
+        padding: 1rem 0.78rem 0.88rem;
+        border-radius: 1.15rem;
+    }
+
+    .table-scroll {
+        overflow-x: visible;
+    }
+
+    .log-table {
+        min-width: 0;
+    }
+
+    .log-table thead {
+        display: none;
+    }
+
+    .log-table tbody {
+        display: block;
+    }
+
+    .log-table tbody tr {
+        display: block;
+        padding: 1.14rem 0.92rem 0.94rem 2.18rem;
+        margin-bottom: 0.62rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.88rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%);
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.05);
+        position: relative;
+    }
+
+    .log-table tbody tr::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.6rem;
+        bottom: 0.6rem;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: rgba(34, 197, 94, 0.25);
+    }
+
+    .log-table tbody tr:nth-child(even) {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fcfb 100%);
+    }
+
+    .log-table tbody tr:nth-child(odd) {
+        background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+    }
+
+    .log-table tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .log-table tbody tr.log-row-empty {
+        display: table-row;
+        border: none;
+        padding: 0;
+        margin-bottom: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .log-table tbody tr.log-row-empty td {
+        border: none;
+        padding: 2.2rem 0.2rem;
+        text-align: center;
+    }
+
+    .log-table td {
+        border-bottom: 0;
+        padding: 0;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        font-size: 0.8rem;
+        line-height: 1.35;
+        color: #1e293b;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.75rem;
+        min-width: 0;
+        margin-bottom: 0.48rem;
+    }
+
+    .log-table td::before {
+        font-size: 0.58rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        flex: 0 0 auto;
+        padding-right: 0.25rem;
+    }
+
+    .log-table .log-cell--date {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-left: 0.55rem;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        margin-bottom: 0.56rem;
+    }
+
+    .log-table .log-cell--desc,
+    .log-table .log-cell--from,
+    .log-table .log-cell--to,
+    .log-table .log-cell--hours {
+        padding-left: 0.55rem;
+    }
+
+    .log-table .log-cell--date::before {
+        content: "Date";
+        padding-top: 0;
+    }
+
+    .log-table .log-cell--desc {
+        color: #475569;
+        font-size: 0.78rem;
+        word-break: break-word;
+    }
+
+    .log-table .log-cell--desc::before {
+        content: "Description";
+    }
+
+    .log-table .log-cell--from::before {
+        content: "From";
+    }
+
+    .log-table .log-cell--to::before {
+        content: "To";
+    }
+
+    .log-table .log-cell--hours {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-right: 2.35rem;
+        margin-bottom: 0;
+    }
+
+    .log-table .log-cell--hours::before {
+        content: "Hours";
+    }
+
+    .log-table .log-cell--select {
+        position: absolute;
+        left: 0.7rem;
+        top: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .log-table .log-cell--select::before,
+    .log-table .log-cell--actions::before {
+        content: none;
+    }
+
+    .log-table .log-cell--actions {
+        position: absolute;
+        right: 0.56rem;
+        bottom: 0.54rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .log-table .log-cell--actions .icon-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #2d6a4f;
+        padding: 0;
+    }
+
+    .log-table .highlight-hrs {
+        font-size: 0.82rem;
+        padding: 0.23rem 0.56rem;
+        border-radius: 999px;
+    }
+
+    .log-table tbody tr:hover td {
+        background: transparent;
+    }
+
+    .log-table tbody tr.row-selected {
+        background: #fef2f2 !important;
+        border-color: #fecaca;
+        box-shadow: 0 10px 20px rgba(220, 38, 38, 0.1);
+    }
+
+    .log-table tbody tr.row-selected::after {
+        background: rgba(220, 38, 38, 0.35);
+    }
+
+    .log-table tbody tr.row-selected td {
+        color: inherit;
+    }
+
+    .log-table tbody tr td:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .pagination-footer {
+        justify-content: center;
+        padding-top: 0.78rem;
+        padding-bottom: 0.1rem;
+        margin-top: 0.28rem;
+    }
+
+    .page-btn {
+        width: 2.05rem;
+        height: 2.05rem;
     }
     
     /* ── MOBILE FORM & MODAL FIXES ── */
@@ -613,6 +1050,450 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         width: 100%;
         padding: 0.85rem !important;
     }
+
+    /* Time Logs: mobile Add Log bottom-sheet style */
+    #log-modal.modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+        overscroll-behavior: contain;
+        touch-action: pan-y pinch-zoom;
+    }
+
+    .modal-card--add-log {
+        width: 100%;
+        max-width: none !important;
+        border-radius: 1.35rem 1.35rem 0 0;
+        max-height: calc(100dvh - 4.1rem);
+        overflow-y: auto;
+        margin: 0;
+        padding: 0.9rem 0.78rem 0.68rem !important;
+        position: relative;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    .modal-card--add-log::before {
+        content: "";
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(71, 85, 105, 0.35);
+        position: absolute;
+        top: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .modal-card--add-log .modal-title-serif {
+        font-size: 1.02rem;
+        margin-bottom: 0.12rem;
+        margin-top: 0.38rem;
+    }
+
+    .modal-card--add-log .modal-subtitle {
+        margin-bottom: 0.62rem;
+        font-size: 0.84rem;
+        line-height: 1.34;
+    }
+
+    .modal-card--add-log .form-row {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem !important;
+    }
+
+    .modal-card--add-log .form-label-styled {
+        font-size: 0.6rem !important;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.26rem !important;
+    }
+
+    .modal-card--add-log .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-card--add-log .form-input-styled {
+        height: 42px;
+        min-height: 42px;
+        padding: 0.34rem 0.62rem !important;
+        font-size: 0.76rem !important;
+        border-radius: 0.66rem;
+        line-height: 1.2;
+    }
+
+    .modal-card--add-log input[type="date"],
+    .modal-card--add-log input[type="time"] {
+        height: 42px;
+        min-height: 42px;
+        font-size: 0.76rem !important;
+        text-align: left;
+        text-align-last: left;
+        -webkit-text-align-last: left;
+        line-height: 1.2;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .modal-card--add-log input[type="date"]::-webkit-date-and-time-value,
+    .modal-card--add-log input[type="time"]::-webkit-date-and-time-value {
+        text-align: left;
+    }
+
+    .modal-card--add-log #hrs-preview {
+        font-size: 0.92rem;
+    }
+
+    .modal-card--add-log [style*="Duration:"] {
+        margin-bottom: 0.8rem !important;
+        font-size: 0.72rem !important;
+    }
+
+    .modal-card--add-log .modal-actions {
+        position: sticky;
+        bottom: 0;
+        margin-top: 0.45rem;
+        padding-top: 0.48rem;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+        background: #ffffff;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 0.45rem;
+        flex-direction: unset;
+    }
+
+    .modal-card--add-log .modal-actions .btn,
+    .modal-card--add-log .modal-actions button {
+        padding: 0.56rem 0.65rem !important;
+        min-height: 36px;
+        border-radius: 0.66rem;
+        font-size: 0.82rem !important;
+    }
+
+    .modal-card--add-log .modal-actions .btn-secondary {
+        background: #ffffff;
+        border-color: rgba(27, 67, 50, 0.22);
+        color: #475569;
+        box-shadow: none;
+    }
+
+    .modal-card--add-log .modal-actions .btn-primary {
+        background: #1b4332;
+        border-color: #1b4332;
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(27, 67, 50, 0.2);
+    }
+
+    /* Time Logs: mobile Edit Log bottom-sheet style */
+    #edit-modal.modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+        overscroll-behavior: contain;
+        touch-action: pan-y pinch-zoom;
+    }
+
+    .modal-card--edit-log {
+        width: 100%;
+        max-width: none !important;
+        border-radius: 1.35rem 1.35rem 0 0;
+        max-height: calc(100dvh - 4.1rem);
+        overflow-y: auto;
+        margin: 0;
+        padding: 0.9rem 0.78rem 0.68rem !important;
+        position: relative;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    .modal-card--edit-log::before {
+        content: "";
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(71, 85, 105, 0.35);
+        position: absolute;
+        top: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .modal-card--edit-log .modal-title-serif {
+        font-size: 1.02rem;
+        margin-bottom: 0.12rem;
+        margin-top: 0.38rem;
+    }
+
+    .modal-card--edit-log .modal-subtitle {
+        margin-bottom: 0.62rem;
+        font-size: 0.84rem;
+        line-height: 1.34;
+    }
+
+    .modal-card--edit-log .form-row {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem !important;
+    }
+
+    .modal-card--edit-log .form-label-styled {
+        font-size: 0.6rem !important;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.26rem !important;
+    }
+
+    .modal-card--edit-log .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-card--edit-log .form-input-styled {
+        height: 42px;
+        min-height: 42px;
+        padding: 0.34rem 0.62rem !important;
+        font-size: 0.76rem !important;
+        border-radius: 0.66rem;
+        line-height: 1.2;
+    }
+
+    .modal-card--edit-log input[type="date"],
+    .modal-card--edit-log input[type="time"] {
+        height: 42px;
+        min-height: 42px;
+        font-size: 0.76rem !important;
+        text-align: left;
+        text-align-last: left;
+        -webkit-text-align-last: left;
+        line-height: 1.2;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .modal-card--edit-log input[type="date"]::-webkit-date-and-time-value,
+    .modal-card--edit-log input[type="time"]::-webkit-date-and-time-value {
+        text-align: left;
+    }
+
+    .modal-card--edit-log #edit-hrs-preview {
+        font-size: 0.92rem;
+    }
+
+    .modal-card--edit-log [style*="Duration:"] {
+        margin-bottom: 0.8rem !important;
+        font-size: 0.72rem !important;
+    }
+
+    .modal-card--edit-log .modal-actions {
+        position: sticky;
+        bottom: 0;
+        margin-top: 0.45rem;
+        padding-top: 0.48rem;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+        background: #ffffff;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 0.45rem;
+        flex-direction: unset;
+    }
+
+    .modal-card--edit-log .modal-actions .btn,
+    .modal-card--edit-log .modal-actions button {
+        padding: 0.56rem 0.65rem !important;
+        min-height: 36px;
+        border-radius: 0.66rem;
+        font-size: 0.82rem !important;
+    }
+
+    .modal-card--edit-log .modal-actions .btn-secondary {
+        background: #ffffff;
+        border-color: rgba(27, 67, 50, 0.22);
+        color: #475569;
+        box-shadow: none;
+    }
+
+    .modal-card--edit-log .modal-actions .btn-primary {
+        background: #1b4332;
+        border-color: #1b4332;
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(27, 67, 50, 0.2);
+    }
+
+    /* Time Logs: mobile Bulk Log bottom-sheet style */
+    #bulk-modal.modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+        overscroll-behavior: contain;
+        touch-action: pan-y pinch-zoom;
+    }
+
+    /* iOS Safari auto-zooms inputs under 16px on focus. Keep inputs >=16px to avoid zoom lock. */
+    @supports (-webkit-touch-callout: none) {
+        .modal-card--add-log .form-input-styled,
+        .modal-card--add-log input,
+        .modal-card--edit-log .form-input-styled,
+        .modal-card--edit-log input,
+        .modal-card--bulk-log .form-input-styled,
+        .modal-card--bulk-log input {
+            font-size: 16px !important;
+        }
+    }
+
+    .modal-card--bulk-log {
+        width: 100%;
+        max-width: none !important;
+        border-radius: 1.35rem 1.35rem 0 0;
+        max-height: calc(100dvh - 4.1rem);
+        overflow-y: auto;
+        margin: 0;
+        padding: 0.9rem 0.78rem 0.68rem !important;
+        position: relative;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    .modal-card--bulk-log::before {
+        content: "";
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(71, 85, 105, 0.35);
+        position: absolute;
+        top: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .modal-card--bulk-log .modal-title-serif {
+        font-size: 1.02rem;
+        margin-bottom: 0.12rem;
+        margin-top: 0.38rem;
+    }
+
+    .modal-card--bulk-log .modal-subtitle {
+        margin-bottom: 0.62rem;
+        font-size: 0.84rem;
+        line-height: 1.34;
+    }
+
+    .modal-card--bulk-log .form-row,
+    .modal-card--bulk-log div[style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem !important;
+    }
+
+    .modal-card--bulk-log .bulk-exclude-hint {
+        color: #888888;
+        font-weight: 500;
+        text-transform: none;
+    }
+
+    .modal-card--bulk-log .bulk-day-toggle-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .modal-card--bulk-log .form-label-styled {
+        font-size: 0.6rem !important;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.26rem !important;
+    }
+
+    .modal-card--bulk-log .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-card--bulk-log .form-input-styled {
+        height: 42px;
+        min-height: 42px;
+        padding: 0.34rem 0.62rem !important;
+        font-size: 0.76rem !important;
+        border-radius: 0.66rem;
+        line-height: 1.2;
+    }
+
+    .modal-card--bulk-log input[type="date"],
+    .modal-card--bulk-log input[type="time"],
+    .modal-card--bulk-log input[type="number"] {
+        height: 42px;
+        min-height: 42px;
+        font-size: 0.76rem !important;
+        text-align: left;
+        text-align-last: left;
+        -webkit-text-align-last: left;
+        line-height: 1.2;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .modal-card--bulk-log input[type="date"]::-webkit-date-and-time-value,
+    .modal-card--bulk-log input[type="time"]::-webkit-date-and-time-value {
+        text-align: left;
+    }
+
+    .modal-card--bulk-log .day-toggle {
+        padding: 0.42rem 0.65rem !important;
+        font-size: 0.68rem !important;
+        min-height: 34px;
+        flex: 0 1 calc(33.333% - 0.34rem);
+        justify-content: center;
+    }
+
+    .modal-card--bulk-log #bulk-range-preview {
+        margin-bottom: 0 !important;
+        font-size: 0.72rem !important;
+        min-height: 0;
+        color: #1b4332;
+        font-weight: 700;
+    }
+
+    .modal-card--bulk-log #bulk-range-preview:not(:empty) {
+        margin-bottom: 0.8rem !important;
+        min-height: 1rem;
+    }
+
+    .modal-card--bulk-log .modal-actions {
+        position: sticky;
+        bottom: 0;
+        margin-top: 0.45rem;
+        padding-top: 0.48rem;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+        background: #ffffff;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 0.45rem;
+        flex-direction: unset;
+    }
+
+    .modal-card--bulk-log .modal-actions .btn,
+    .modal-card--bulk-log .modal-actions button {
+        padding: 0.56rem 0.65rem !important;
+        min-height: 36px;
+        border-radius: 0.66rem;
+        font-size: 0.82rem !important;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .modal-card--bulk-log .modal-actions .btn-secondary {
+        background: #ffffff;
+        border-color: rgba(27, 67, 50, 0.22);
+        color: #475569;
+        box-shadow: none;
+    }
+
+    .modal-card--bulk-log .modal-actions .btn-primary {
+        background: #1b4332;
+        border-color: #1b4332;
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(27, 67, 50, 0.2);
+    }
     
     /* ── BULK FORM MOBILE FIXES ── */
     .day-toggle {
@@ -622,20 +1503,94 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         flex: 0 1 calc(50% - 0.375rem);
         margin-bottom: 0.5rem;
     }
+
+    @media (max-width: 380px) {
+        .modal-card--bulk-log .day-toggle {
+            flex: 0 1 calc(50% - 0.35rem);
+        }
+
+        .modal-card--bulk-log .modal-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Keep this at the end of the mobile block so it overrides smaller !important sizes above. */
+    @supports (-webkit-touch-callout: none) {
+        .modal-card--add-log .form-input-styled,
+        .modal-card--add-log input,
+        .modal-card--add-log textarea,
+        .modal-card--add-log select,
+        .modal-card--edit-log .form-input-styled,
+        .modal-card--edit-log input,
+        .modal-card--edit-log textarea,
+        .modal-card--edit-log select,
+        .modal-card--bulk-log .form-input-styled,
+        .modal-card--bulk-log input,
+        .modal-card--bulk-log textarea,
+        .modal-card--bulk-log select {
+            font-size: 16px !important;
+            line-height: 1.25;
+        }
+    }
 }
 
 
 
 /* When buttons are tight — hide text, show icon only */
 @media (max-width: 480px) {
-    .page-actions .btn-label,
-    .dash-hero-actions.logs-hero-actions .btn-label { display: none; }
-    .page-actions .btn,
-    .dash-hero-actions.logs-hero-actions .btn { padding: 0.6em; flex: 0 0 auto; }
-    .page-actions .btn svg,
-    .dash-hero-actions.logs-hero-actions .btn svg { width: 18px; height: 18px; }
+    .log-table tbody tr {
+        padding: 1.12rem 0.84rem 0.92rem 2.02rem;
+    }
+
+    .new-cal-grid {
+        min-width: 520px;
+        grid-template-rows: auto repeat(6, minmax(4.4rem, 1fr));
+    }
+
+    .new-cal-date {
+        font-size: 0.74rem;
+    }
+
+    .log-table .log-cell--date {
+        padding-left: 0.42rem;
+    }
+
+    .log-table .log-cell--desc,
+    .log-table .log-cell--from,
+    .log-table .log-cell--to,
+    .log-table .log-cell--hours {
+        padding-left: 0.42rem;
+    }
+
     .page-actions,
-    .dash-hero-actions.logs-hero-actions { gap: 0.5rem; }
+    .dash-hero-actions.logs-hero-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.45rem;
+        margin-top: 0.3rem;
+    }
+
+    .page-actions .btn-label,
+    .dash-hero-actions.logs-hero-actions .btn-label {
+        display: none;
+    }
+
+    .page-actions .btn,
+    .dash-hero-actions.logs-hero-actions .btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.66rem;
+        border-radius: 0.72rem;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .page-actions .btn svg,
+    .dash-hero-actions.logs-hero-actions .btn svg {
+        width: 19px;
+        height: 19px;
+    }
 }
 
 /* Mid range — show short labels */

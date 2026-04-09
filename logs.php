@@ -60,6 +60,7 @@ if ($current_page > $total_pages && $total_pages > 0) $current_page = $total_pag
 $paginated_logs = array_slice($all_logs, ($current_page - 1) * $logs_per_page, $logs_per_page);
 
 $month_param = $_GET['month'] ?? date('Y-m'); if (!preg_match('/^\d{4}-\d{2}$/', $month_param)) $month_param = date('Y-m');
+$force_tutorial = (($_GET['tutorial'] ?? '') === '1');
 [$cal_year, $cal_month] = explode('-', $month_param); $cal_year = (int) $cal_year; $cal_month = (int) $cal_month;
 $first_date_ts = mktime(0, 0, 0, $cal_month, 1, $cal_year); 
 $prev_month = date('Y-m', mktime(0, 0, 0, $cal_month - 1, 1, $cal_year)); 
@@ -83,6 +84,10 @@ include 'includes/header.php';
             <p class="dash-hero-sub logs-hero-sub">Track and manage your daily on-the-job training hours.</p>
         </div>
         <div class="dash-hero-actions logs-hero-actions">
+            <button type="button" class="btn btn-outline" id="start-log-tutorial-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span class="btn-label">How to Add Previous Logs</span>
+            </button>
             <button type="button" class="btn btn-outline" id="view-toggle-btn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <span class="btn-label">View Calendar</span>
@@ -157,16 +162,16 @@ include 'includes/header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($paginated_logs)): ?><tr><td colspan="7" style="text-align:center;padding:3rem;color:#888;">No logs found.</td></tr><?php else: ?>
+                        <?php if (empty($paginated_logs)): ?><tr class="log-row-empty"><td colspan="7" style="text-align:center;padding:3rem;color:#888;">No logs found.</td></tr><?php else: ?>
                         <?php foreach ($paginated_logs as $log): ?>
                         <tr>
-                            <td style="text-align:center;"><input type="checkbox" class="row-checkbox custom-checkbox" value="<?= e($log['id']) ?>" /></td>
-                            <td style="color:var(--text);"><?= e(date('M j, Y', strtotime($log['date']))) ?></td>
-                            <td><?= e(strlen($log['description']) > 30 ? substr($log['description'], 0, 30) . '...' : ($log['description'] ?: '—')) ?></td>
-                            <td><?= e(date('g:i A', strtotime($log['from']))) ?></td>
-                            <td><?= e(date('g:i A', strtotime($log['to']))) ?></td>
-                            <td class="col-hrs"><span class="highlight-hrs"><?= e(number_format($log['hours'], 1)) ?></span></td>
-                            <td style="text-align:center;">
+                            <td class="log-cell log-cell--select" style="text-align:center;"><input type="checkbox" class="row-checkbox custom-checkbox" value="<?= e($log['id']) ?>" /></td>
+                            <td class="log-cell log-cell--date" style="color:var(--text);"><?= e(date('M j, Y', strtotime($log['date']))) ?></td>
+                            <td class="log-cell log-cell--desc"><?= e(strlen($log['description']) > 30 ? substr($log['description'], 0, 30) . '...' : ($log['description'] ?: '—')) ?></td>
+                            <td class="log-cell log-cell--from"><?= e(date('g:i A', strtotime($log['from']))) ?></td>
+                            <td class="log-cell log-cell--to"><?= e(date('g:i A', strtotime($log['to']))) ?></td>
+                            <td class="log-cell log-cell--hours col-hrs"><span class="highlight-hrs"><?= e(number_format($log['hours'], 1)) ?></span></td>
+                            <td class="log-cell log-cell--actions" style="text-align:center;">
                                 <button class="icon-btn edit-btn" data-id="<?= e($log['id']) ?>" data-date="<?= e($log['date']) ?>" data-desc="<?= e($log['description'] ?? '') ?>" data-from="<?= e($log['from']) ?>" data-to="<?= e($log['to']) ?>" title="Edit">
                                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                                 </button>
@@ -210,7 +215,7 @@ include 'includes/header.php';
 </div>
 
 <div class="modal-overlay" id="log-modal">
-  <div class="modal-card">
+    <div class="modal-card modal-card--add-log">
     <div class="modal-title-serif">New Log Entry</div>
     <div class="modal-subtitle">Record your OJT hours for a specific day.</div>
     <?php foreach ($log_errors as $err): ?><span class="form-error" style="color:#ef4444;font-size:0.75rem;display:block;margin-bottom:0.625rem;"><?= e($err) ?></span><?php endforeach; ?>
@@ -229,7 +234,7 @@ include 'includes/header.php';
 </div>
 
 <div class="modal-overlay" id="edit-modal">
-  <div class="modal-card">
+    <div class="modal-card modal-card--edit-log">
     <div class="modal-title-serif">Edit Log</div>
     <div class="modal-subtitle">Update the details for this log entry.</div>
     <form method="POST" action="logs.php">
@@ -258,19 +263,19 @@ include 'includes/header.php';
 </div>
 
 <div class="modal-overlay" id="bulk-modal">
-  <div class="modal-card" style="max-width:min(520px, 92vw); width:100%; box-sizing:border-box;">
+        <div class="modal-card modal-card--bulk-log">
     <div class="modal-title-serif">Bulk Entry</div>
     <div class="modal-subtitle">Fill past days automatically. Already-logged days are skipped.</div>
     <form method="POST" action="logs.php"><input type="hidden" name="action" value="bulk_log" />
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
         <div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="date" name="bulk_start" id="bulk-start" required /></div>
         <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="date" name="bulk_end" id="bulk-end" required /></div>
       </div>
       <div class="form-group" style="margin-bottom:1.25rem;"><label class="form-label-styled">Hrs/Day</label><input class="form-input-styled" type="number" name="bulk_hrs" id="bulk-hrs" value="8" min="0.5" max="24" step="0.5" required /></div>
       <input type="hidden" name="bulk_from" value="08:00" /><input type="hidden" name="bulk_to" id="bulk-to-hidden" value="16:00" />
       <div class="form-group" style="margin-bottom:1.25rem;">
-        <label class="form-label-styled" style="margin-bottom:0.625rem;">Exclude Days <span style="color:#888;font-weight:500;text-transform:none;">(SELECTED = SKIP)</span></label>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <label class="form-label-styled" style="margin-bottom:0.625rem;">Exclude Days <span class="bulk-exclude-hint">(SELECTED = SKIP)</span></label>
+                <div class="bulk-day-toggle-row" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
             <?php foreach (['MON','TUE','WED','THU','FRI','SAT','SUN'] as $i => $day): ?>
                 <label class="day-toggle <?= in_array($day, ['SAT','SUN']) ? 'day-toggle--excluded' : '' ?>">
                     <input type="checkbox" name="exclude_days[]" value="<?= $i + 1 ?>" <?= in_array($day, ['SAT','SUN']) ? 'checked' : '' ?> style="display:none;" />
@@ -280,10 +285,24 @@ include 'includes/header.php';
         </div>
       </div>
       <div class="form-group" style="margin-bottom:1.25rem;"><label class="form-label-styled">Description (optional)</label><input class="form-input-styled" type="text" name="bulk_desc" placeholder="e.g. OJT at company" /></div>
-      <div id="bulk-range-preview" style="font-size:0.75rem;margin-bottom:1.5rem;min-height:1rem;color:#1b4332;font-weight:700;"></div>
-      <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:0.625rem;"><button type="button" class="btn btn-secondary" id="bulk-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Fill Days in Range</button></div>
+            <div id="bulk-range-preview" class="bulk-range-preview"></div>
+            <div class="modal-actions"><button type="button" class="btn btn-secondary" id="bulk-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Fill Range</button></div>
     </form>
   </div>
+</div>
+
+<div id="logs-tutorial-overlay" class="tutorial-overlay" aria-hidden="true">
+    <div class="tutorial-backdrop"></div>
+    <div class="tutorial-card" id="logs-tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-step-title">
+        <div class="tutorial-step-count" id="tutorial-step-count">Step 1 of 1</div>
+        <h3 class="tutorial-step-title" id="tutorial-step-title">Tutorial</h3>
+        <p class="tutorial-step-body" id="tutorial-step-body"></p>
+        <div class="tutorial-actions">
+            <button type="button" class="btn btn-secondary" id="tutorial-prev-btn">Back</button>
+            <button type="button" class="btn btn-outline" id="tutorial-skip-btn">Skip</button>
+            <button type="button" class="btn btn-primary" id="tutorial-next-btn">Next</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -343,7 +362,7 @@ viewListBtn.addEventListener('click', toggleView);
 // ── CALENDAR CLICKS ──
 function handleDayClick(date, isLogged) { 
     if (isLogged) { openDayModal(date); } 
-    else { document.getElementById('log-date').value = date; document.getElementById('log-modal').classList.add('open'); }
+    else { document.getElementById('log-date').value = date; openLogModalSheet(); }
 }
 
 function handleCalCheckbox(cb) {
@@ -355,16 +374,225 @@ function handleCalCheckbox(cb) {
 
 // ── MODAL HANDLING ──
 const logModal = document.getElementById('log-modal');
+const logModalCard = logModal?.querySelector('.modal-card--add-log') || null;
+const logForm = logModal?.querySelector('form') || null;
 const editModal = document.getElementById('edit-modal');
+const editModalCard = editModal?.querySelector('.modal-card--edit-log') || null;
+const editForm = editModal?.querySelector('form') || null;
 const bulkModal = document.getElementById('bulk-modal');
+const bulkModalCard = bulkModal?.querySelector('.modal-card--bulk-log') || null;
+const bulkForm = bulkModal?.querySelector('form') || null;
 const dayModal = document.getElementById('day-modal');
 
-document.getElementById('open-modal-btn')?.addEventListener('click', () => logModal.classList.add('open'));
-document.getElementById('modal-close-btn')?.addEventListener('click', () => logModal.classList.remove('open'));
-document.getElementById('open-bulk-btn')?.addEventListener('click', () => bulkModal.classList.add('open'));
-document.getElementById('bulk-close-btn')?.addEventListener('click', () => bulkModal.classList.remove('open'));
-document.getElementById('edit-close-btn')?.addEventListener('click', () => editModal.classList.remove('open'));
-window.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open'); });
+let logsPageScrollY = 0;
+function lockLogsPageScroll() {
+    if (window.innerWidth > 768) return;
+    logsPageScrollY = window.scrollY || window.pageYOffset || 0;
+    document.documentElement.classList.add('quick-log-open');
+    document.body.classList.add('quick-log-open');
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${logsPageScrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+}
+
+function unlockLogsPageScroll() {
+    if (window.innerWidth > 768) return;
+    document.documentElement.classList.remove('quick-log-open');
+    document.body.classList.remove('quick-log-open');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, logsPageScrollY);
+}
+
+function openLogModalSheet() {
+    logModal?.classList.add('open');
+    lockLogsPageScroll();
+}
+
+function closeLogModalSheet() {
+    logModal?.classList.remove('open');
+    unlockLogsPageScroll();
+}
+
+function openEditModalSheet() {
+    editModal?.classList.add('open');
+    lockLogsPageScroll();
+}
+
+function closeEditModalSheet() {
+    editModal?.classList.remove('open');
+    unlockLogsPageScroll();
+}
+
+function openBulkModalSheet() {
+    bulkModal?.classList.add('open');
+    lockLogsPageScroll();
+}
+
+function closeBulkModalSheet() {
+    bulkModal?.classList.remove('open');
+    unlockLogsPageScroll();
+}
+
+document.getElementById('open-modal-btn')?.addEventListener('click', () => openLogModalSheet());
+document.getElementById('modal-close-btn')?.addEventListener('click', () => closeLogModalSheet());
+document.getElementById('open-bulk-btn')?.addEventListener('click', () => openBulkModalSheet());
+document.getElementById('bulk-close-btn')?.addEventListener('click', () => closeBulkModalSheet());
+document.getElementById('edit-close-btn')?.addEventListener('click', () => closeEditModalSheet());
+window.addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) {
+        if (logModal && e.target === logModal) {
+            closeLogModalSheet();
+            return;
+        }
+        if (editModal && e.target === editModal) {
+            closeEditModalSheet();
+            return;
+        }
+        if (bulkModal && e.target === bulkModal) {
+            closeBulkModalSheet();
+            return;
+        }
+        e.target.classList.remove('open');
+    }
+});
+logForm?.addEventListener('submit', () => unlockLogsPageScroll());
+editForm?.addEventListener('submit', () => unlockLogsPageScroll());
+bulkForm?.addEventListener('submit', () => unlockLogsPageScroll());
+
+if (logModalCard && logModal) {
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let dragY = 0;
+    let canSwipeToClose = false;
+
+    logModalCard.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768 || !e.touches[0]) return;
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        dragY = 0;
+        canSwipeToClose = logModalCard.scrollTop <= 0;
+    }, { passive: true });
+
+    logModalCard.addEventListener('touchmove', (e) => {
+        if (!canSwipeToClose || window.innerWidth > 768 || !e.touches[0]) return;
+        const deltaY = e.touches[0].clientY - touchStartY;
+        const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+        if (deltaY > 0 && deltaY > deltaX) {
+            e.preventDefault();
+            dragY = Math.min(deltaY, 110);
+            logModalCard.style.transform = `translateY(${dragY * 0.35}px)`;
+        }
+    }, { passive: false });
+
+    logModalCard.addEventListener('touchend', () => {
+        if (window.innerWidth > 768) return;
+        if (canSwipeToClose && dragY > 85) {
+            closeLogModalSheet();
+        }
+        logModalCard.style.transform = '';
+        touchStartY = 0;
+        touchStartX = 0;
+        dragY = 0;
+        canSwipeToClose = false;
+    });
+
+    logModal.addEventListener('touchmove', (e) => {
+        if (window.innerWidth > 768) return;
+        if (!logModalCard.contains(e.target)) e.preventDefault();
+    }, { passive: false });
+}
+
+if (editModalCard && editModal) {
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let dragY = 0;
+    let canSwipeToClose = false;
+
+    editModalCard.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768 || !e.touches[0]) return;
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        dragY = 0;
+        canSwipeToClose = editModalCard.scrollTop <= 0;
+    }, { passive: true });
+
+    editModalCard.addEventListener('touchmove', (e) => {
+        if (!canSwipeToClose || window.innerWidth > 768 || !e.touches[0]) return;
+        const deltaY = e.touches[0].clientY - touchStartY;
+        const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+        if (deltaY > 0 && deltaY > deltaX) {
+            e.preventDefault();
+            dragY = Math.min(deltaY, 110);
+            editModalCard.style.transform = `translateY(${dragY * 0.35}px)`;
+        }
+    }, { passive: false });
+
+    editModalCard.addEventListener('touchend', () => {
+        if (window.innerWidth > 768) return;
+        if (canSwipeToClose && dragY > 85) {
+            closeEditModalSheet();
+        }
+        editModalCard.style.transform = '';
+        touchStartY = 0;
+        touchStartX = 0;
+        dragY = 0;
+        canSwipeToClose = false;
+    });
+
+    editModal.addEventListener('touchmove', (e) => {
+        if (window.innerWidth > 768) return;
+        if (!editModalCard.contains(e.target)) e.preventDefault();
+    }, { passive: false });
+}
+
+if (bulkModalCard && bulkModal) {
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let dragY = 0;
+    let canSwipeToClose = false;
+
+    bulkModalCard.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768 || !e.touches[0]) return;
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        dragY = 0;
+        canSwipeToClose = bulkModalCard.scrollTop <= 0;
+    }, { passive: true });
+
+    bulkModalCard.addEventListener('touchmove', (e) => {
+        if (!canSwipeToClose || window.innerWidth > 768 || !e.touches[0]) return;
+        const deltaY = e.touches[0].clientY - touchStartY;
+        const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+        if (deltaY > 0 && deltaY > deltaX) {
+            e.preventDefault();
+            dragY = Math.min(deltaY, 110);
+            bulkModalCard.style.transform = `translateY(${dragY * 0.35}px)`;
+        }
+    }, { passive: false });
+
+    bulkModalCard.addEventListener('touchend', () => {
+        if (window.innerWidth > 768) return;
+        if (canSwipeToClose && dragY > 85) {
+            closeBulkModalSheet();
+        }
+        bulkModalCard.style.transform = '';
+        touchStartY = 0;
+        touchStartX = 0;
+        dragY = 0;
+        canSwipeToClose = false;
+    });
+
+    bulkModal.addEventListener('touchmove', (e) => {
+        if (window.innerWidth > 768) return;
+        if (!bulkModalCard.contains(e.target)) e.preventDefault();
+    }, { passive: false });
+}
 
 // ── EDIT LOGIC ──
 document.querySelectorAll('.edit-btn').forEach(btn => { 
@@ -374,7 +602,7 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
         document.getElementById('edit-desc').value = btn.dataset.desc; 
         document.getElementById('edit-from').value = btn.dataset.from; 
         document.getElementById('edit-to').value = btn.dataset.to; 
-        updateEditPreview(); editModal.classList.add('open'); 
+        updateEditPreview(); openEditModalSheet(); 
     }); 
 });
 
@@ -395,9 +623,9 @@ function openDayModal(date) {
     logs.forEach(l => { html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:#f8fafc;border-radius:0.5rem;border:1px solid #e2e8f0;flex-wrap:wrap;gap:0.5rem;"><div style="min-width:0;"><div style="font-size:0.8125rem;font-weight:700;color:var(--text);">${formatTime(l.from)} — ${formatTime(l.to)} <span style="color:#1b4332;margin-left:0.5rem;">${parseFloat(l.hours).toFixed(2)} hrs</span></div>${l.desc?`<div style="font-size:0.75rem;color:#64748b;margin-top:4px;word-break:break-word;">${l.desc}</div>`:''}</div><div style="display:flex;gap:0.5rem;align-items:center;flex-shrink:0;"><button type="button" class="icon-btn" onclick="openEditFromDay('${l.id}','${l.date}','${l.from}','${l.to}',\`${l.desc.replace(/`/g,"'")}\`)" title="Edit"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button><form method="POST" action="logs.php" style="display:inline;margin:0;" onsubmit="return confirm('Delete this log?')"><input type="hidden" name="action" value="delete_log" /><input type="hidden" name="log_id" value="${l.id}" /><button type="submit" class="icon-btn delete" title="Delete"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></form></div></div>`; });
     html += '</div>'; document.getElementById('day-modal-body').innerHTML = html; dayModal.classList.add('open');
 }
-function openEditFromDay(id,date,from,to,desc) { dayModal.classList.remove('open'); document.getElementById('edit-log-id').value=id; document.getElementById('edit-date').value=date; document.getElementById('edit-from').value=from; document.getElementById('edit-to').value=to; document.getElementById('edit-desc').value=desc; updateEditPreview(); editModal.classList.add('open'); }
+function openEditFromDay(id,date,from,to,desc) { dayModal.classList.remove('open'); document.getElementById('edit-log-id').value=id; document.getElementById('edit-date').value=date; document.getElementById('edit-from').value=from; document.getElementById('edit-to').value=to; document.getElementById('edit-desc').value=desc; updateEditPreview(); openEditModalSheet(); }
 document.getElementById('day-modal-close')?.addEventListener('click', () => dayModal.classList.remove('open'));
-document.getElementById('day-modal-add')?.addEventListener('click', () => { dayModal.classList.remove('open'); document.getElementById('log-date').value=currentDayDate; logModal.classList.add('open'); });
+document.getElementById('day-modal-add')?.addEventListener('click', () => { dayModal.classList.remove('open'); document.getElementById('log-date').value=currentDayDate; openLogModalSheet(); });
 
 // ── BULK LOG MODAL ──
 document.querySelectorAll('.day-toggle input[type="checkbox"]').forEach(cb => { cb.addEventListener('change', (e) => { e.target.closest('.day-toggle').classList.toggle('day-toggle--excluded', e.target.checked); updateRangePreview(); }); });
@@ -407,6 +635,279 @@ if(bulkHrs) bulkHrs.addEventListener('change', updateBulkToTime);
 const bulkStart=document.getElementById('bulk-start'), bulkEnd=document.getElementById('bulk-end'), rangePreview=document.getElementById('bulk-range-preview');
 function updateRangePreview() { if(!bulkStart||!bulkEnd||!rangePreview) return; if(!bulkStart.value||!bulkEnd.value){rangePreview.textContent='';return;} const start=new Date(bulkStart.value); const end=new Date(bulkEnd.value); if(start>end){rangePreview.textContent='Start must be before end.';rangePreview.style.color='#dc2626';return;} const excluded=Array.from(document.querySelectorAll('.day-toggle input:checked')).map(cb=>parseInt(cb.value)); let count=0,cursor=new Date(start); while(cursor<=end){const iso=cursor.getDay()===0?7:cursor.getDay();if(!excluded.includes(iso))count++;cursor.setDate(cursor.getDate()+1);} const hrs=parseFloat(bulkHrs?.value)||8; rangePreview.style.color='#1b4332'; rangePreview.textContent=`${count} day${count!==1?'s':''} will be filled — ${(hrs*count).toFixed(1)} hrs total`; }
 if(bulkStart) bulkStart.addEventListener('change', updateRangePreview); if(bulkEnd) bulkEnd.addEventListener('change', updateRangePreview);
+
+// ── PREVIOUS LOGS TUTORIAL ──
+const tutorialOverlay = document.getElementById('logs-tutorial-overlay');
+const tutorialCard = document.getElementById('logs-tutorial-card');
+const tutorialStepCount = document.getElementById('tutorial-step-count');
+const tutorialStepTitle = document.getElementById('tutorial-step-title');
+const tutorialStepBody = document.getElementById('tutorial-step-body');
+const tutorialPrevBtn = document.getElementById('tutorial-prev-btn');
+const tutorialSkipBtn = document.getElementById('tutorial-skip-btn');
+const tutorialNextBtn = document.getElementById('tutorial-next-btn');
+const tutorialStartBtn = document.getElementById('start-log-tutorial-btn');
+const TUTORIAL_STORAGE_KEY = 'logs_previous_tutorial_done_v1_<?= (int) ($user['id'] ?? 0) ?>';
+const forceTutorial = <?= $force_tutorial ? 'true' : 'false' ?>;
+
+let tutorialStepIndex = 0;
+let tutorialFocusedEl = null;
+
+function hasCompletedTutorial() {
+    try {
+        return localStorage.getItem(TUTORIAL_STORAGE_KEY) === '1';
+    } catch (e) {
+        return false;
+    }
+}
+
+function markTutorialCompleted() {
+    try {
+        localStorage.setItem(TUTORIAL_STORAGE_KEY, '1');
+    } catch (e) {
+        // Ignore storage failures; tutorial will simply reappear on later visits.
+    }
+}
+
+function closeAllLogModals() {
+    [logModal, editModal, bulkModal, dayModal].forEach(m => m?.classList.remove('open'));
+}
+
+function setLogsView(mode) {
+    if (!viewCal || !viewList || !viewListBtn) return;
+    if (mode === 'calendar') {
+        viewCal.style.display = 'block';
+        viewList.style.display = 'none';
+        setToggleBtn('calendar');
+        localStorage.setItem('logs_view', 'calendar');
+    } else {
+        viewCal.style.display = 'none';
+        viewList.style.display = 'block';
+        setToggleBtn('list');
+        localStorage.setItem('logs_view', 'list');
+    }
+    clearAllSelections();
+}
+
+const tutorialSteps = [
+    {
+        title: 'Welcome',
+        body: 'This short guide shows how to add past OJT logs using single entry and bulk entry.',
+        selector: '#start-log-tutorial-btn'
+    },
+    {
+        title: 'Open New Log Entry',
+        body: 'Use New Log Entry when filling a specific previous date.',
+        selector: '#open-modal-btn',
+        prepare: () => closeAllLogModals()
+    },
+    {
+        title: 'Use Bulk Log for Many Days',
+        body: 'Use Bulk Log when you need to fill multiple previous days quickly.',
+        selector: '#open-bulk-btn',
+        prepare: () => closeAllLogModals()
+    },
+    {
+        title: 'Multi-Select Delete in Table',
+        body: 'Use the checkboxes in the table to select multiple logs, then use the Delete action bar to remove them at once.',
+        selector: '#select-all',
+        prepare: () => {
+            closeAllLogModals();
+            setLogsView('list');
+            const firstRowCheckbox = document.querySelector('.row-checkbox');
+            if (firstRowCheckbox) {
+                firstRowCheckbox.checked = true;
+                updateBulkBar();
+            }
+        }
+    },
+    {
+        title: 'View Calendar Button',
+        body: 'Use this button to switch from list view to calendar view.',
+        selector: '#view-toggle-btn',
+        prepare: () => {
+            closeAllLogModals();
+            setLogsView('list');
+        }
+    },
+    {
+        title: 'View List Button',
+        body: 'When you are in calendar view, this same button lets you switch back to list view.',
+        selector: '#view-toggle-btn',
+        prepare: () => {
+            closeAllLogModals();
+            setLogsView('calendar');
+        }
+    },
+    {
+        title: 'You are Ready',
+        body: 'You can reopen this guide anytime using How to Add Previous Logs.',
+        selector: '#start-log-tutorial-btn',
+        prepare: () => closeAllLogModals()
+    }
+];
+
+function clearTutorialFocus() {
+    if (tutorialFocusedEl) {
+        tutorialFocusedEl.classList.remove('tutorial-focus');
+        tutorialFocusedEl.classList.remove('tutorial-focus--strong');
+    }
+    tutorialFocusedEl = null;
+}
+
+function positionTutorialCard(targetEl) {
+    if (!tutorialCard) return;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+    tutorialCard.style.right = '';
+    tutorialCard.style.bottom = '';
+
+    if (isMobile) {
+        tutorialCard.style.left = '12px';
+        tutorialCard.style.right = '12px';
+        tutorialCard.style.bottom = '12px';
+        tutorialCard.style.top = 'auto';
+        tutorialCard.style.width = 'auto';
+        tutorialCard.style.transform = 'none';
+        return;
+    }
+
+    const viewportPad = 12;
+    const gap = 14;
+    const cardWidth = Math.min(360, window.innerWidth - (viewportPad * 2));
+    tutorialCard.style.width = cardWidth + 'px';
+    tutorialCard.style.transform = 'none';
+
+    if (!targetEl) {
+        tutorialCard.style.left = Math.max(viewportPad, window.innerWidth - cardWidth - viewportPad) + 'px';
+        tutorialCard.style.top = viewportPad + 'px';
+        return;
+    }
+
+    const rect = targetEl.getBoundingClientRect();
+    const cardHeight = tutorialCard.offsetHeight || 220;
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    const candidates = [
+        {
+            x: clamp(rect.left, viewportPad, window.innerWidth - cardWidth - viewportPad),
+            y: rect.bottom + gap
+        },
+        {
+            x: clamp(rect.left, viewportPad, window.innerWidth - cardWidth - viewportPad),
+            y: rect.top - cardHeight - gap
+        },
+        {
+            x: rect.right + gap,
+            y: clamp(rect.top + (rect.height / 2) - (cardHeight / 2), viewportPad, window.innerHeight - cardHeight - viewportPad)
+        },
+        {
+            x: rect.left - cardWidth - gap,
+            y: clamp(rect.top + (rect.height / 2) - (cardHeight / 2), viewportPad, window.innerHeight - cardHeight - viewportPad)
+        }
+    ];
+
+    const fitsViewport = pos => (
+        pos.x >= viewportPad &&
+        pos.y >= viewportPad &&
+        (pos.x + cardWidth) <= (window.innerWidth - viewportPad) &&
+        (pos.y + cardHeight) <= (window.innerHeight - viewportPad)
+    );
+
+    const overlapsTarget = pos => {
+        const cardRect = {
+            left: pos.x,
+            right: pos.x + cardWidth,
+            top: pos.y,
+            bottom: pos.y + cardHeight
+        };
+        return !(cardRect.right < rect.left || cardRect.left > rect.right || cardRect.bottom < rect.top || cardRect.top > rect.bottom);
+    };
+
+    let chosen = candidates.find(pos => fitsViewport(pos) && !overlapsTarget(pos));
+
+    if (!chosen) {
+        chosen = {
+            x: Math.max(viewportPad, window.innerWidth - cardWidth - viewportPad),
+            y: viewportPad
+        };
+    }
+
+    tutorialCard.style.left = Math.round(chosen.x) + 'px';
+    tutorialCard.style.top = Math.round(chosen.y) + 'px';
+}
+
+function renderTutorialStep() {
+    const step = tutorialSteps[tutorialStepIndex];
+    if (!step || !tutorialOverlay) return;
+    if (typeof step.prepare === 'function') step.prepare();
+
+    tutorialStepCount.textContent = `Step ${tutorialStepIndex + 1} of ${tutorialSteps.length}`;
+    tutorialStepTitle.textContent = step.title;
+    tutorialStepBody.textContent = step.body;
+    tutorialPrevBtn.disabled = tutorialStepIndex === 0;
+    tutorialNextBtn.textContent = tutorialStepIndex === tutorialSteps.length - 1 ? 'Finish' : 'Next';
+
+    clearTutorialFocus();
+    const targetEl = document.querySelector(step.selector);
+    if (targetEl) {
+        tutorialFocusedEl = targetEl;
+        tutorialFocusedEl.classList.add('tutorial-focus');
+        tutorialFocusedEl.classList.add('tutorial-focus--strong');
+        tutorialFocusedEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }
+    positionTutorialCard(targetEl);
+}
+
+function closeTutorial(markDone = false) {
+    clearTutorialFocus();
+    tutorialOverlay?.classList.remove('open');
+    tutorialOverlay?.setAttribute('aria-hidden', 'true');
+    if (markDone) markTutorialCompleted();
+    closeAllLogModals();
+}
+
+function openTutorial() {
+    if (!tutorialOverlay) return;
+    tutorialStepIndex = 0;
+    tutorialOverlay.classList.add('open');
+    tutorialOverlay.setAttribute('aria-hidden', 'false');
+    renderTutorialStep();
+}
+
+tutorialStartBtn?.addEventListener('click', openTutorial);
+tutorialPrevBtn?.addEventListener('click', () => {
+    if (tutorialStepIndex > 0) {
+        tutorialStepIndex -= 1;
+        renderTutorialStep();
+    }
+});
+tutorialNextBtn?.addEventListener('click', () => {
+    if (tutorialStepIndex < tutorialSteps.length - 1) {
+        tutorialStepIndex += 1;
+        renderTutorialStep();
+    } else {
+        closeTutorial(true);
+    }
+});
+tutorialSkipBtn?.addEventListener('click', () => closeTutorial(true));
+window.addEventListener('resize', () => {
+    if (!tutorialOverlay?.classList.contains('open') || !tutorialFocusedEl) return;
+    positionTutorialCard(tutorialFocusedEl);
+});
+window.addEventListener('keydown', e => {
+    if (!tutorialOverlay?.classList.contains('open')) return;
+    if (e.key === 'Escape') closeTutorial(false);
+});
+
+setTimeout(() => {
+    if (forceTutorial || !hasCompletedTutorial()) openTutorial();
+
+    if (forceTutorial && window.history?.replaceState) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('tutorial');
+        window.history.replaceState({}, '', cleanUrl.toString());
+    }
+}, 450);
 
 // ── FLOATING ACTION BAR ──
 const selectAll = document.getElementById('select-all');
@@ -469,7 +970,7 @@ if (bulkDeselect) {
     }); 
 }
 
-<?php if (!empty($log_errors)): ?>document.getElementById('log-modal').classList.add('open');<?php endif; ?>
+<?php if (!empty($log_errors)): ?>openLogModalSheet();<?php endif; ?>
 </script>
 
 <?php include 'includes/footer.php'; ?>

@@ -1,5 +1,6 @@
 <?php
 define('APP_NAME', 'Practica');
+define('APP_VERSION', 'v0.5.0');
 
 // Default values
 define('DEFAULT_REQUIRED_HOURS', 500);
@@ -31,11 +32,40 @@ function db(): PDO {
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 ]
             );
+            ensure_users_schema($pdo);
         } catch (PDOException $e) {
             die('Database connection failed: ' . $e->getMessage());
         }
     }
     return $pdo;
+}
+
+function ensure_users_schema(PDO $pdo): void {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+
+    // Only attempt migrations when users table already exists.
+    $tableStmt = $pdo->prepare('SHOW TABLES LIKE ?');
+    $tableStmt->execute(['users']);
+    if (!$tableStmt->fetch()) return;
+
+    $requiredColumns = [
+        'required_hours' => 'ALTER TABLE users ADD COLUMN required_hours DECIMAL(10,2) NOT NULL DEFAULT ' . DEFAULT_REQUIRED_HOURS,
+        'allowance_per_day' => 'ALTER TABLE users ADD COLUMN allowance_per_day DECIMAL(10,2) NOT NULL DEFAULT 0',
+        'currency' => "ALTER TABLE users ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'PHP'",
+        'security_question' => 'ALTER TABLE users ADD COLUMN security_question VARCHAR(255) NULL',
+        'security_answer' => 'ALTER TABLE users ADD COLUMN security_answer VARCHAR(255) NULL',
+        'email' => 'ALTER TABLE users ADD COLUMN email VARCHAR(255) NULL',
+    ];
+
+    foreach ($requiredColumns as $column => $sql) {
+        $colStmt = $pdo->prepare('SHOW COLUMNS FROM users LIKE ?');
+        $colStmt->execute([$column]);
+        if (!$colStmt->fetch()) {
+            $pdo->exec($sql);
+        }
+    }
 }
 
 // ── User helpers ──────────────────────────────────────────────
@@ -257,7 +287,16 @@ function get_security_question(string $username): ?string {
 function verify_security_answer(string $username, string $answer): bool {
     $user = get_user($username);
     if (!$user || !isset($user['security_answer'])) return false;
-    return strtolower(trim($answer)) === strtolower(trim($user['security_answer']));
+
+    $normalizedAnswer = strtolower(trim($answer));
+    $stored = (string) $user['security_answer'];
+
+    // Support both legacy plain-text answers and current hashed answers.
+    if (str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon2')) {
+        return verify_password($normalizedAnswer, $stored);
+    }
+
+    return hash_equals(strtolower(trim($stored)), $normalizedAnswer);
 }
 
 function e(string $str): string {

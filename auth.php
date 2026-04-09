@@ -17,6 +17,8 @@ $reg_data = [
   'allowance_per_day'=> $_POST['allowance_per_day'] ?? '',
   'currency'         => $_POST['currency'] ?? 'PHP',
   'password'         => $_POST['password'] ?? '',
+  'security_question'=> $_POST['security_question'] ?? '',
+  'security_answer'  => $_POST['security_answer'] ?? '',
 ];
 
 $fp_step = (int) ($_POST['fp_step'] ?? 1);
@@ -313,16 +315,16 @@ $hero = $hero_by_mode[$mode];
               <label class="auth-label" for="register-question">Security question</label>
               <select class="auth-input" id="register-question" name="security_question" required>
                 <option value="">Select a question</option>
-                <option value="What is your mother's maiden name?" <?= $_POST['security_question'] === "What is your mother's maiden name?" ? 'selected' : '' ?>>What is your mother's maiden name?</option>
-                <option value="What was the name of your first pet?" <?= $_POST['security_question'] === "What was the name of your first pet?" ? 'selected' : '' ?>>What was the name of your first pet?</option>
-                <option value="What is the name of your favorite teacher?" <?= $_POST['security_question'] === "What is the name of your favorite teacher?" ? 'selected' : '' ?>>What is the name of your favorite teacher?</option>
-                <option value="What city were you born in?" <?= $_POST['security_question'] === "What city were you born in?" ? 'selected' : '' ?>>What city were you born in?</option>
-                <option value="What is your favorite book?" <?= $_POST['security_question'] === "What is your favorite book?" ? 'selected' : '' ?>>What is your favorite book?</option>
+                <option value="What is your mother's maiden name?" <?= $reg_data['security_question'] === "What is your mother's maiden name?" ? 'selected' : '' ?>>What is your mother's maiden name?</option>
+                <option value="What was the name of your first pet?" <?= $reg_data['security_question'] === "What was the name of your first pet?" ? 'selected' : '' ?>>What was the name of your first pet?</option>
+                <option value="What is the name of your favorite teacher?" <?= $reg_data['security_question'] === "What is the name of your favorite teacher?" ? 'selected' : '' ?>>What is the name of your favorite teacher?</option>
+                <option value="What city were you born in?" <?= $reg_data['security_question'] === "What city were you born in?" ? 'selected' : '' ?>>What city were you born in?</option>
+                <option value="What is your favorite book?" <?= $reg_data['security_question'] === "What is your favorite book?" ? 'selected' : '' ?>>What is your favorite book?</option>
               </select>
             </div>
             <div class="auth-field">
               <label class="auth-label" for="register-answer">Security answer</label>
-              <input class="auth-input" id="register-answer" type="text" name="security_answer" placeholder="Your answer" value="<?= e($_POST['security_answer'] ?? '') ?>" required />
+              <input class="auth-input" id="register-answer" type="text" name="security_answer" placeholder="Your answer" value="<?= e($reg_data['security_answer']) ?>" required />
             </div>
             <button type="submit" class="auth-btn">Create Account</button>
           </form>

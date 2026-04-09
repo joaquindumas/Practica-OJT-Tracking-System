@@ -1,10 +1,10 @@
 <?php
-require_once 'includes/config.php'; require_login();
-$user = current_user(); $active_page = 'dashboard'; $log_errors = [];
+require_once 'includes/config.php';
+require_login();
 
-$user = current_user(); 
-$active_page = 'dashboard'; 
-$page_css = 'css/dashboard.css'; 
+$user = current_user();
+$active_page = 'dashboard';
+$page_css = 'css/dashboard.css';
 $log_errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -57,6 +57,16 @@ if (!empty($all_logs)) {
 }
 $day_count = $total_days;
 
+$today_str = date('Y-m-d');
+$today_log = null;
+$today_hrs = 0;
+foreach ($all_logs as $l) {
+  if (($l['date'] ?? '') === $today_str) {
+    $today_log = $l;
+    $today_hrs += (float) ($l['hours'] ?? 0);
+  }
+}
+
 include 'includes/header.php';
 ?>
 
@@ -64,27 +74,34 @@ include 'includes/header.php';
 <div class="dash-wrap">
   <div class="dash-hero">
     <div class="dash-hero-content">
-      <div class="dash-hero-eyebrow">Overview</div>
+      <div class="dash-hero-eyebrow">OJT Dashboard</div>
       <h1 class="dash-hero-title"><?= $greeting ?>, <?= e(explode(' ', $user['name'] ?? $user['username'])[0]) ?> 👋</h1>
-      <div class="dash-day-counter">
-  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
-  Day <?= $total_days ?> of OJT &nbsp;·&nbsp; <?= date('D, M j, Y') ?>
-</div>
+      <div class="dash-hero-status" id="hero-today-status">
+        <div class="dash-hero-status-top">
+          <span class="dash-hero-status-title">Today's Status</span>
+          <span class="status-badge <?= $today_log ? 'logged' : 'pending' ?>"><?= $today_log ? 'Logged' : 'Pending' ?></span>
+        </div>
+        <span class="dash-hero-status-meta">Day <?= $total_days ?> of OJT &nbsp;·&nbsp; <?= date('D, M j, Y') ?></span>
+        <button type="button" class="dash-hero-status-link" data-open-quick-log>Quick Log</button>
+      </div>
     </div>
-  <div class="dash-hero-actions">
-  <button class="btn dash-btn-solid" id="open-modal-btn">
-    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-    New Log Entry
-  </button>
-</div>
   </div>
 
   <?php
-    $total_allowance     = $total_days * $allowance;
-    $earned_allowance    = round($logged / ($avg_hrs_day ?: 8)) * $allowance;
-    $remaining_allowance = max(0, $projected_days * $allowance);
-    $total_projected     = $total_allowance + $remaining_allowance;
-    $allowance_pct       = $total_projected > 0 ? min(100, ($total_allowance / $total_projected) * 100) : 0;
+    $week_start = date('Y-m-d', strtotime('monday this week'));
+    $week_end = date('Y-m-d', strtotime('sunday this week'));
+    $week_logged_dates = [];
+    foreach ($all_logs as $week_log) {
+      $week_date = $week_log['date'] ?? '';
+      if ($week_date >= $week_start && $week_date <= $week_end) {
+        $week_logged_dates[$week_date] = true;
+      }
+    }
+    $week_logged_days = count($week_logged_dates);
+    $weekly_collected_allowance = $week_logged_days * $allowance;
+    $total_collected_allowance = $total_days * $allowance;
+    $remaining_money_by_days_left = max(0, $projected_days * $allowance);
+    $week_range_label = date('M j', strtotime($week_start)) . ' - ' . date('M j', strtotime($week_end));
   ?>
   <div class="dash-stat-row-3">
 
@@ -116,17 +133,18 @@ include 'includes/header.php';
 
     <div class="dash-stat-card dash-stat-card--allowance">
       <div class="dash-stat-eyebrow">Allowance Summary</div>
-      <div class="dash-stat-num"><?= get_currency_symbol($user['currency']) ?><?= number_format($total_projected, 2) ?> <span class="dash-stat-denom">Total</span></div>
+      <div class="dash-stat-num"><?= get_currency_symbol($user['currency']) ?><?= number_format($weekly_collected_allowance, 2) ?> <span class="dash-stat-denom">Collected This Week</span></div>
+      <div class="dash-stat-sub"><?= e($week_range_label) ?> · <?= $week_logged_days ?> day<?= $week_logged_days !== 1 ? 's' : '' ?> logged</div>
       
   <div class="allowance-split">
   <div class="allowance-split-item">
-    <span class="allowance-split-label">Used</span>
-    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($total_allowance, 2) ?></span>
+    <span class="allowance-split-label">Total Collected</span>
+    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($total_collected_allowance, 2) ?></span>
   </div>
   <div class="allowance-split-divider"></div>
   <div class="allowance-split-item">
-    <span class="allowance-split-label">Remaining</span>
-    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($remaining_allowance, 2) ?></span>
+    <span class="allowance-split-label">Projected Left</span>
+    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($remaining_money_by_days_left, 2) ?></span>
   </div>
 </div>
       </div>
@@ -148,19 +166,19 @@ include 'includes/header.php';
                     <td colspan="6">
                         <div class="table-empty-state">
                             <div class="table-empty-title">No logs yet</div>
-                            <div class="table-empty-sub">Click "New Log Entry" to get started</div>
+                          <div class="table-empty-sub">Visit Time Logs to add your first entry</div>
                         </div>
                     </td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($recent_logs as $log): ?>
                 <tr class="dash-log-row">
-                    <td class="font-600"><?= e(date('M j, Y', strtotime($log['date']))) ?></td>
-                    <td><?= e($log['description'] ?: '—') ?></td>
-                    <td class="tabular-nums"><?= e(date('g:i A', strtotime($log['from']))) ?></td>
-                    <td class="tabular-nums"><?= e(date('g:i A', strtotime($log['to']))) ?></td>
-                    <td><span class="highlight-hrs"><?= e(number_format($log['hours'], 1)) ?></span></td>
-                    <td>
+                  <td class="font-600" data-label="Date"><?= e(date('M j, Y', strtotime($log['date']))) ?></td>
+                  <td data-label="Description"><?= e($log['description'] ?: '—') ?></td>
+                  <td class="tabular-nums" data-label="From"><?= e(date('g:i A', strtotime($log['from']))) ?></td>
+                  <td class="tabular-nums" data-label="To"><?= e(date('g:i A', strtotime($log['to']))) ?></td>
+                  <td data-label="Hrs"><span class="highlight-hrs"><?= e(number_format($log['hours'], 1)) ?></span></td>
+                  <td data-label="Actions">
                         <div style="display: flex; gap: 4px; justify-content: flex-end;">
                             <button class="action-btn edit-btn" data-id="<?= e($log['id']) ?>" data-date="<?= e($log['date']) ?>" data-desc="<?= e($log['description'] ?? '') ?>" data-from="<?= e($log['from']) ?>" data-to="<?= e($log['to']) ?>" title="Edit">
                                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
@@ -182,65 +200,33 @@ include 'includes/header.php';
       </div>
     </div>
 
-    <div class="dash-right">
-      <div class="status-card">
-        <div class="status-header">
-            <div>
-                <div class="status-title">Today's Status</div>
-                <div class="status-date"><?= date('D, M j, Y') ?></div>
-            </div>
-          <?php $today_str = date('Y-m-d'); $today_log = null; $today_hrs = 0; foreach ($all_logs as $l) { if ($l['date'] === $today_str) { $today_log = $l; $today_hrs += $l['hours']; } } ?>
-          <span class="status-badge <?= $today_log ? 'logged' : 'pending' ?>"><?= $today_log ? 'Logged' : 'Pending' ?></span>
-        </div>
-        
-        <div class="status-body">
-          <?php if ($today_log): ?>
-            <div class="status-success-state">
-              <div class="status-success-icon">
-                <svg viewBox="0 0 24 24" fill="white" class="icon-lg"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-              </div>
-              <div class="status-success-title">Log Recorded</div>
-              <div class="status-success-sub"><strong><?= number_format($today_hrs, 1) ?> hours</strong> added today</div>
-            </div>
-          <?php else: ?>
-            <form method="POST" action="dashboard.php" class="status-form">
-                <input type="hidden" name="action" value="log_hours" />
-                <input type="hidden" name="date" value="<?= date('Y-m-d') ?>" />
-                <textarea name="description" placeholder="Briefly describe your tasks..."></textarea>
-                <div class="today-time-row">
-                    <div class="today-time-group"><label>From</label><input type="time" name="from" value="08:00"></div>
-                    <div class="today-time-group"><label>To</label><input type="time" name="to" value="16:00"></div>
-                </div>
-              <button type="submit" class="btn-submit-status">Save Log</button>
-            </form>
-          <?php endif; ?>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="log-modal">
-  <div class="modal-card">
+<div class="modal-overlay" id="quick-log-modal">
+  <div class="modal-card modal-card--quick-log" style="max-width:min(520px, 95vw);">
     <div class="modal-title-serif">New Log Entry</div>
-    <div class="modal-subtitle">Record your OJT hours for a specific day.</div>
-    <?php foreach ($log_errors as $err): ?><span class="form-error" style="color:#ef4444;font-size:0.75rem;display:block;margin-bottom:0.625rem;"><?= e($err) ?></span><?php endforeach; ?>
+    <div class="modal-subtitle">Add your OJT hours for today without leaving the dashboard.</div>
+    <?php foreach ($log_errors as $err): ?>
+      <span class="form-error" style="color:#ef4444;font-size:0.75rem;display:block;margin-bottom:0.625rem;"><?= e($err) ?></span>
+    <?php endforeach; ?>
     <form method="POST" action="dashboard.php">
       <input type="hidden" name="action" value="log_hours" />
-      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Date</label><input class="form-input-styled" type="date" id="log-date" name="date" value="<?= date('Y-m-d') ?>" required /></div>
-      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Description (Optional)</label><input class="form-input-styled" type="text" id="log-desc" name="description" placeholder="What did you work on?" /></div>
+      <input type="hidden" id="quick-log-date" name="date" value="<?= date('Y-m-d') ?>" />
+      <div style="font-size:0.75rem;color:var(--text3);margin-bottom:1rem;font-weight:600;">Logging for <strong id="quick-log-date-label" style="color:#1b4332;"><?= e(date('D, M j, Y')) ?></strong></div>
+      <div class="form-group" style="margin-bottom:1rem;"><label class="form-label-styled">Description</label><input class="form-input-styled" type="text" id="quick-log-desc" name="description" placeholder="What did you work on?" /></div>
       <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
-        <div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="time" id="log-from" name="from" value="08:00" required /></div>
-        <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="time" id="log-to" name="to" value="16:00" required /></div>
+        <div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="time" id="quick-log-from" name="from" value="08:00" required /></div>
+        <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="time" id="quick-log-to" name="to" value="16:00" required /></div>
       </div>
-      <div style="font-size:0.75rem;color:var(--text3);margin-bottom:1.5rem;font-weight:600;">Duration: <strong id="hrs-preview" style="color:#1b4332;">8.00 hrs</strong></div>
-      <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:0.625rem;"><button type="button" class="btn btn-secondary" id="modal-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Save Log</button></div>
+      <div style="font-size:0.75rem;color:var(--text3);margin-bottom:1.5rem;font-weight:600;">Duration: <strong id="quick-hrs-preview" style="color:#1b4332;">8.00 hrs</strong></div>
+      <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:0.625rem;"><button type="button" class="btn btn-secondary" id="quick-log-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Save Log</button></div>
     </form>
   </div>
 </div>
 
 <div class="modal-overlay" id="edit-modal">
-  <div class="modal-card">
+  <div class="modal-card modal-card--edit-log">
     <div class="modal-title-serif">Edit Log</div>
     <div class="modal-subtitle">Update the details for this log entry.</div>
     <form method="POST" action="dashboard.php">
@@ -252,7 +238,7 @@ include 'includes/header.php';
         <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="time" id="edit-to" name="to" required /></div>
       </div>
       <div style="font-size:0.75rem;color:var(--text3);margin-bottom:1.5rem;font-weight:600;">Duration: <strong id="edit-hrs-preview" style="color:#1b4332;"></strong></div>
-      <div class="modal-actions" style="display:flex;justify-content:flex-end;gap:0.625rem;"><button type="button" class="btn btn-secondary" id="edit-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
+      <div class="modal-actions"><button type="button" class="btn btn-secondary" id="edit-close-btn">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
     </form>
   </div>
 </div>
@@ -308,30 +294,197 @@ function calcHrs(from, to) {
 }
 
 // ── 2. MODAL OPEN / CLOSE LOGIC ──
-const logModal = document.getElementById('log-modal');
+// Note: #log-modal removed - "Today's Status" card handles quick logging
 const editModal = document.getElementById('edit-modal');
 const bulkModal = document.getElementById('bulk-modal');
 const dayModal = document.getElementById('day-modal');
+const quickLogModal = document.getElementById('quick-log-modal');
+const editModalCard = editModal?.querySelector('.modal-card--edit-log') || null;
+const editForm = editModal?.querySelector('form') || null;
+const quickLogCard = quickLogModal?.querySelector('.modal-card--quick-log') || null;
+const quickLogForm = quickLogModal?.querySelector('form') || null;
+const quickLogFrom = document.getElementById('quick-log-from');
+const quickLogTo = document.getElementById('quick-log-to');
+const quickHrsPreview = document.getElementById('quick-hrs-preview');
 
-// Dashboard Trigger Buttons (Ensure your dashboard buttons have these IDs)
-document.getElementById('open-modal-btn')?.addEventListener('click', () => logModal.classList.add('open'));
+let pageScrollY = 0;
+function lockPageScroll() {
+  if (window.innerWidth > 768) return;
+  pageScrollY = window.scrollY || window.pageYOffset || 0;
+  document.documentElement.classList.add('quick-log-open');
+  document.body.classList.add('quick-log-open');
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${pageScrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+}
+
+function unlockPageScroll() {
+  if (window.innerWidth > 768) return;
+  document.documentElement.classList.remove('quick-log-open');
+  document.body.classList.remove('quick-log-open');
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  window.scrollTo(0, pageScrollY);
+}
+
+function openQuickLogModal() {
+  const quickLogDate = document.getElementById('quick-log-date');
+  const quickLogDateLabel = document.getElementById('quick-log-date-label');
+  if (quickLogDate) quickLogDate.value = new Date().toISOString().slice(0, 10);
+  if (quickLogDateLabel) {
+    quickLogDateLabel.textContent = new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(new Date());
+  }
+  updateQuickPreview();
+  quickLogModal?.classList.add('open');
+  lockPageScroll();
+}
+
+function closeQuickLogModal() {
+  quickLogModal?.classList.remove('open');
+  unlockPageScroll();
+}
+
+function openEditLogModal() {
+  updateEditPreview();
+  editModal?.classList.add('open');
+  lockPageScroll();
+}
+
+function closeEditLogModal() {
+  editModal?.classList.remove('open');
+  unlockPageScroll();
+}
+
+// Dashboard Trigger Buttons
 document.getElementById('open-bulk-btn')?.addEventListener('click', () => bulkModal.classList.add('open'));
+document.querySelectorAll('[data-open-quick-log]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    openQuickLogModal();
+  });
+});
 
 // Close Buttons inside Modals
-document.getElementById('modal-close-btn')?.addEventListener('click', () => logModal.classList.remove('open'));
-document.getElementById('edit-close-btn')?.addEventListener('click', () => editModal.classList.remove('open'));
+document.getElementById('edit-close-btn')?.addEventListener('click', () => closeEditLogModal());
 document.getElementById('bulk-close-btn')?.addEventListener('click', () => bulkModal.classList.remove('open'));
 document.getElementById('day-modal-close')?.addEventListener('click', () => dayModal?.classList.remove('open'));
+document.getElementById('quick-log-close-btn')?.addEventListener('click', () => closeQuickLogModal());
+quickLogForm?.addEventListener('submit', () => unlockPageScroll());
+editForm?.addEventListener('submit', () => unlockPageScroll());
 
-// Day Modal 'New Log' action
-document.getElementById('day-modal-add')?.addEventListener('click', () => {
-    dayModal?.classList.remove('open');
-    logModal.classList.add('open');
-});
+// Mobile: swipe down on quick-log sheet to close.
+if (quickLogCard && quickLogModal) {
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let dragY = 0;
+  let canSwipeToClose = false;
+
+  quickLogCard.addEventListener('touchstart', (e) => {
+    if (window.innerWidth > 768 || !e.touches[0]) return;
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+    dragY = 0;
+    canSwipeToClose = quickLogCard.scrollTop <= 0;
+  }, { passive: true });
+
+  quickLogCard.addEventListener('touchmove', (e) => {
+    if (!canSwipeToClose || window.innerWidth > 768 || !e.touches[0]) return;
+    const deltaY = e.touches[0].clientY - touchStartY;
+    const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+    if (deltaY > 0 && deltaY > deltaX) {
+      e.preventDefault();
+      dragY = Math.min(deltaY, 110);
+      quickLogCard.style.transform = `translateY(${dragY * 0.35}px)`;
+    }
+  }, { passive: false });
+
+  quickLogCard.addEventListener('touchend', () => {
+    if (window.innerWidth > 768) return;
+    if (canSwipeToClose && dragY > 85) {
+      closeQuickLogModal();
+    }
+    quickLogCard.style.transform = '';
+    touchStartY = 0;
+    touchStartX = 0;
+    dragY = 0;
+    canSwipeToClose = false;
+  });
+
+  quickLogModal.addEventListener('touchmove', (e) => {
+    if (window.innerWidth > 768) return;
+    if (!quickLogCard.contains(e.target)) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}
+
+// Mobile: swipe down on edit-log sheet to close.
+if (editModalCard && editModal) {
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let dragY = 0;
+  let canSwipeToClose = false;
+
+  editModalCard.addEventListener('touchstart', (e) => {
+    if (window.innerWidth > 768 || !e.touches[0]) return;
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+    dragY = 0;
+    canSwipeToClose = editModalCard.scrollTop <= 0;
+  }, { passive: true });
+
+  editModalCard.addEventListener('touchmove', (e) => {
+    if (!canSwipeToClose || window.innerWidth > 768 || !e.touches[0]) return;
+    const deltaY = e.touches[0].clientY - touchStartY;
+    const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
+    if (deltaY > 0 && deltaY > deltaX) {
+      e.preventDefault();
+      dragY = Math.min(deltaY, 110);
+      editModalCard.style.transform = `translateY(${dragY * 0.35}px)`;
+    }
+  }, { passive: false });
+
+  editModalCard.addEventListener('touchend', () => {
+    if (window.innerWidth > 768) return;
+    if (canSwipeToClose && dragY > 85) {
+      closeEditLogModal();
+    }
+    editModalCard.style.transform = '';
+    touchStartY = 0;
+    touchStartX = 0;
+    dragY = 0;
+    canSwipeToClose = false;
+  });
+
+  editModal.addEventListener('touchmove', (e) => {
+    if (window.innerWidth > 768) return;
+    if (!editModalCard.contains(e.target)) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+}
+
 
 // Close when clicking on the dark overlay background
 window.addEventListener('click', e => { 
     if (e.target.classList.contains('modal-overlay')) {
+    if (quickLogModal && e.target === quickLogModal) {
+      closeQuickLogModal();
+      return;
+    }
+    if (editModal && e.target === editModal) {
+      closeEditLogModal();
+      return;
+    }
         e.target.classList.remove('open'); 
     }
 });
@@ -345,20 +498,13 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
         document.getElementById('edit-from').value = btn.dataset.from || ''; 
         document.getElementById('edit-to').value = btn.dataset.to || ''; 
         updateEditPreview(); 
-        editModal.classList.add('open'); 
+    openEditLogModal(); 
     }); 
 });
 
 // ── 4. LIVE DURATION PREVIEWS ──
-const logFrom = document.getElementById('log-from'), logTo = document.getElementById('log-to'), hrsPreview = document.getElementById('hrs-preview');
+// Note: log-modal preview removed - modal no longer exists
 const editFrom = document.getElementById('edit-from'), editTo = document.getElementById('edit-to'), editPreview = document.getElementById('edit-hrs-preview');
-
-function updateHrsPreview() { 
-    if(!logFrom || !logTo || !hrsPreview) return; 
-    const hrs = calcHrs(logFrom.value, logTo.value); 
-    hrsPreview.textContent = hrs > 0 ? hrs.toFixed(2) + ' hrs' : '— invalid'; 
-    hrsPreview.style.color = hrs > 0 ? '#1b4332' : '#dc2626'; 
-}
 
 function updateEditPreview() { 
     if(!editFrom || !editTo || !editPreview) return; 
@@ -367,13 +513,19 @@ function updateEditPreview() {
     editPreview.style.color = hrs > 0 ? '#1b4332' : '#dc2626'; 
 }
 
-if(logFrom) logFrom.addEventListener('change', updateHrsPreview); 
-if(logTo) logTo.addEventListener('change', updateHrsPreview);
+function updateQuickPreview() {
+  if (!quickLogFrom || !quickLogTo || !quickHrsPreview) return;
+  const hrs = calcHrs(quickLogFrom.value, quickLogTo.value);
+  quickHrsPreview.textContent = hrs > 0 ? hrs.toFixed(2) + ' hrs' : '— invalid';
+  quickHrsPreview.style.color = hrs > 0 ? '#1b4332' : '#dc2626';
+}
+
 if(editFrom) editFrom.addEventListener('change', updateEditPreview); 
 if(editTo) editTo.addEventListener('change', updateEditPreview);
+if(quickLogFrom) quickLogFrom.addEventListener('change', updateQuickPreview);
+if(quickLogTo) quickLogTo.addEventListener('change', updateQuickPreview);
+updateQuickPreview();
 
-// Initialize standard new log preview
-updateHrsPreview();
 
 // ── 5. BULK ENTRY LOGIC ──
 // Toggle Excluded Days Style
@@ -429,4 +581,132 @@ function updateRangePreview() {
 if(bulkStart) bulkStart.addEventListener('change', updateRangePreview); 
 if(bulkEnd) bulkEnd.addEventListener('change', updateRangePreview);
 </script>
+
+<!-- Driver.js Tutorial Library -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css">
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.iife.js" id="driver-script"></script>
+
+<script>
+// Dashboard Tutorial for First-Time Users
+(function() {
+    const tutorialCompleted = <?= $user['tutorial_completed'] ?? 0 ?>;
+    
+    console.log('Tutorial Debug - tutorialCompleted value:', tutorialCompleted);
+    console.log('Tutorial Debug - typeof tutorialCompleted:', typeof tutorialCompleted);
+    
+    function initTutorial() {
+        console.log('Tutorial Debug - initTutorial called');
+        console.log('Tutorial Debug - window.driver exists:', typeof window.driver !== 'undefined');
+        
+        // Check if Driver.js loaded successfully
+        if (typeof window.driver === 'undefined') {
+            console.warn('Driver.js failed to load from CDN. Tutorial skipped.');
+            return;
+        }
+        
+        // Only show tutorial for new users
+        if (tutorialCompleted === 0) {
+            console.log('Tutorial Debug - Starting tutorial...');
+            const driverObj = window.driver({
+            showProgress: true,
+            showButtons: ['next', 'previous'],
+            steps: [
+                {
+                    popover: {
+                        title: 'Welcome to Practica!',
+                        description: 'Let\'s take a quick tour of your OJT tracking dashboard. You can skip this anytime by pressing ESC or clicking "Close".',
+                    }
+                },
+                {
+                  element: '#hero-today-status',
+                    popover: {
+                        title: 'Today\'s Status',
+                    description: 'See whether today is logged and jump directly to Time Logs when you need to add or review entries.',
+                        side: 'left',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '.dash-log-table',
+                    popover: {
+                        title: 'Recent Logs',
+                        description: 'View your recent log entries. You can edit or delete them by clicking the action icons.',
+                        side: 'top',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '.table-link',
+                    popover: {
+                        title: 'Time Logs',
+                        description: 'Click here to access Time Logs for bulk entry or historical logging.',
+                        side: 'bottom',
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '.dash-stat-card--progress',
+                    popover: {
+                        title: 'Progress Tracking',
+                        description: 'Monitor your completion progress toward your required hours.',
+                        side: 'right',
+                        align: 'start'
+                    }
+                },
+                {
+                    popover: {
+                        title: 'You\'re All Set!',
+                        description: 'You can restart this tutorial anytime from Settings. Happy tracking!',
+                    }
+                }
+            ],
+            onDestroyStarted: function() {
+                // Mark tutorial as completed (whether finished or skipped)
+                fetch('dashboard.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=complete_tutorial'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Tutorial marked as completed');
+                    }
+                })
+                .catch(error => console.warn('Failed to save tutorial state:', error));
+                
+                // Allow the destroy to proceed
+                driverObj.destroy();
+            }
+        });
+        
+        // Start the tutorial
+        driverObj.drive();
+    }
+    }
+    
+    // Wait for Driver.js script to load, then initialize
+    const driverScript = document.getElementById('driver-script');
+    if (driverScript) {
+        driverScript.addEventListener('load', function() {
+            console.log('Tutorial Debug - Driver.js script loaded');
+            // Small delay to ensure driver object is available
+            setTimeout(initTutorial, 100);
+        });
+        
+        // If script already loaded (cached), run immediately
+        if (driverScript.readyState === 'complete') {
+            console.log('Tutorial Debug - Driver.js already loaded from cache');
+            setTimeout(initTutorial, 100);
+        }
+    } else {
+        console.warn('Tutorial Debug - Driver script element not found');
+    }
+})();
+</script>
+
 </div>
+
+<?php include 'includes/footer.php'; ?>
