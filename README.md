@@ -1,76 +1,184 @@
-# Practica-OJT-Tracking-System
+# Practica OJT Tracking System
 
-A PHP-based OJT (On-the-Job Training) internship hours tracker.
+Practica is a PHP + MySQL web app for tracking OJT (On-the-Job Training) hours, progress, and allowance in one dashboard.
+
+Current version: v0.5.0
+
+Live website: https://getpractica.me
+
+## What's Updated in v0.5.0
+
+- Dashboard quick log flow now supports fast current-day logging from multiple triggers.
+- Dashboard status and allowance cards were refined for readability and tighter spacing.
+- Allowance card labels now use "Allowance Summary" with weekly and total context.
+- Mobile header/sidebar behavior was fixed (toggle binding conflict resolved).
+- Mobile Time Logs header actions were redesigned into touch-friendly button layout.
+- Shared version display now reads from APP_VERSION consistently.
+
+## Tech Stack
+
+- PHP 8+
+- MySQL / MariaDB (PDO)
+- Vanilla JavaScript
+- Modular CSS files per page/section
 
 ## Project Structure
 
 ```
 ojt_tracker/
-│
-├── landing.php         ← Overview of the System
-├── index.php           ← Login & Register page
-├── dashboard.php       ← Main dashboard with stats & progress
-├── logs.php            ← Full time logs table
-├── settings.php        ← Profile, password, logout
-├── logout.php          ← Quick logout shortcut
-│
+├── landing.php
+├── auth.php
+├── forgot_password.php
+├── dashboard.php
+├── logs.php
+├── settings.php
+├── logout.php
 ├── includes/
-│   ├── config.php      ← App config, data helpers, auth helpers
-│   ├── header.php      ← Shared HTML head + sidebar
-│   └── footer.php      ← Closing HTML + JS
-│
+│   ├── config.php
+│   ├── header.php
+│   └── footer.php
 ├── css/
-│   └── main.css        ← All styles
-│
-├── js/
-│   └── app.js          ← Modal, hour preview, delete confirm
-│
-└── data/
-    └── users.json      ← Auto-created; stores all user data
+│   ├── main.css
+│   ├── header.css
+│   ├── auth.css
+│   ├── dashboard.css
+│   ├── logs.css
+│   └── landing.css
+└── js/
+    └── app.js
 ```
+
+## Core Features
+
+- Authentication: login, register, logout, and password reset with security question.
+- Dashboard analytics: total logged hours, remaining hours, completion percentage, and estimated completion date.
+- Quick Log modal from dashboard for faster same-day entries.
+- Allowance Summary card with collected this week, total collected, and projected remaining by days left.
+- Time Logs page with calendar/list modes, pagination, edit/delete, and bulk log entry.
+- Settings page for profile, required hours, allowance per day, currency, and password updates.
+- Mobile-responsive layout with sidebar drawer, topbar controls, and optimized action buttons.
 
 ## Requirements
 
-- PHP 8.0+
-- No database required (uses flat JSON file storage)
-- Web server (Apache/Nginx) OR PHP built-in server
+- PHP 8.0 or higher
+- MySQL or MariaDB
+- Apache/Nginx or PHP built-in server
 
-## Quick Start
+## Database Setup
 
-### Option A — PHP built-in server
+1. Create database:
+
+```sql
+CREATE DATABASE ojt_tracker CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+2. Create tables (minimum required):
+
+```sql
+USE ojt_tracker;
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  username VARCHAR(80) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  required_hours DECIMAL(10,2) NOT NULL DEFAULT 500,
+  allowance_per_day DECIMAL(10,2) NOT NULL DEFAULT 0,
+  currency VARCHAR(3) NOT NULL DEFAULT 'PHP',
+  security_question VARCHAR(255) NULL,
+  security_answer VARCHAR(255) NULL,
+  email VARCHAR(255) NULL,
+  tutorial_completed TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE time_logs (
+  id VARCHAR(64) PRIMARY KEY,
+  user_id INT NOT NULL,
+  date DATE NOT NULL,
+  description TEXT NULL,
+  time_from TIME NOT NULL,
+  time_to TIME NOT NULL,
+  hours DECIMAL(10,4) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_time_logs_user_date (user_id, date),
+  CONSTRAINT fk_time_logs_user FOREIGN KEY (user_id)
+    REFERENCES users(id) ON DELETE CASCADE
+);
+```
+
+3. Update database credentials in includes/config.php:
+
+- DB_HOST
+- DB_NAME
+- DB_USER
+- DB_PASS
+
+Note: Some user columns are auto-migrated when missing, but required tables should exist first.
+
+## Run Locally
+
+### Option A: XAMPP
+
+1. Put this project in htdocs (example: C:/xampp/htdocs/ojt_tracker).
+2. Start Apache and MySQL in XAMPP.
+3. Open http://localhost/ojt_tracker/landing.php
+
+### Option B: PHP built-in server
+
 ```bash
 cd ojt_tracker
 php -S localhost:8000
-# Open http://localhost:8000
 ```
 
-### Option B — XAMPP / WAMP / Laragon
-1. Copy the `ojt_tracker/` folder into your `htdocs` (XAMPP) or `www` (WAMP) directory
-2. Visit `http://localhost/ojt_tracker/`
+Then open http://localhost:8000/landing.php
 
-### Option C — Production server
-1. Upload all files via FTP/SFTP
-2. Make sure `data/` directory is writable: `chmod 755 data/`
-3. Visit your domain
+### Production
 
-## Features
-
-- Multi-user authentication (register / login / logout)
-- Secure password hashing via `password_hash()`
-- Log hours by date, description, time-in and time-out
-- Auto-calculated hours per entry
-- Dashboard with Required / Logged / Remaining stats
-- Progress bar with estimated completion date
-- Delete individual log entries
-- Update profile name and required OJT hours
-- Change password with current-password verification
-- Flash notifications (success/error)
-- Responsive sidebar layout
+Live website: https://getpractica.me
 
 ## Security Notes
 
-- Passwords are hashed using PHP's `PASSWORD_DEFAULT` (bcrypt)
-- All output is escaped with `htmlspecialchars()`
-- Session-based authentication
-- For production use, consider moving `data/` outside the web root
-  and pointing `DATA_DIR` in `config.php` accordingly
+- Passwords use PASSWORD_DEFAULT hashing.
+- Security answers are verified case-insensitively and support hashed storage.
+- Output escaping uses htmlspecialchars via helper e().
+- Session-based authentication is enforced on protected pages.
+
+## Notes
+
+- App timezone defaults to Asia/Manila.
+- UI assets are cache-busted with query-string timestamps in shared includes.
+
+## Release Checklist (v2 -> main)
+
+Use this checklist when preparing a release from v2 to main.
+
+1. Update version in includes/config.php:
+  - APP_VERSION should match your release target (example: v0.5.0).
+2. Confirm docs are updated:
+  - README reflects feature, setup, and version changes.
+3. Verify working tree:
+  - git status
+  - ensure only intended files are staged.
+4. Commit and push on v2:
+  - git add .
+  - git commit -m "release: v0.5.0"
+  - git push origin v2
+5. Validate branch divergence:
+  - git fetch origin
+  - git rev-list --left-right --count origin/main...origin/v2
+6. Open PR from v2 to main on GitHub.
+7. Review and merge PR after checks pass.
+8. Create release tag after merge:
+  - git checkout main
+  - git pull origin main
+  - git tag v0.5.0
+  - git push origin v0.5.0
+9. Create GitHub Release notes from the tag.
+
+Recommended release note sections:
+
+- Highlights
+- Fixes
+- UI/UX improvements
+- Known limitations
