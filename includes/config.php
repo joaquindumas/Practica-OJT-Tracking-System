@@ -1,5 +1,12 @@
 <?php
 define('APP_NAME', 'Practica');
+define('APP_VERSION', 'v0.5.0');
+
+// Default values
+define('DEFAULT_REQUIRED_HOURS', 500);
+
+// Use PH local time for greetings, logs, and date displays across all pages.
+date_default_timezone_set('Asia/Manila');
 
 // ── Database config ───────────────────────────────────────────
 define('DB_HOST', 'localhost');
@@ -25,11 +32,40 @@ function db(): PDO {
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 ]
             );
+            ensure_users_schema($pdo);
         } catch (PDOException $e) {
             die('Database connection failed: ' . $e->getMessage());
         }
     }
     return $pdo;
+}
+
+function ensure_users_schema(PDO $pdo): void {
+    static $checked = false;
+    if ($checked) return;
+    $checked = true;
+
+    // Only attempt migrations when users table already exists.
+    $tableStmt = $pdo->prepare('SHOW TABLES LIKE ?');
+    $tableStmt->execute(['users']);
+    if (!$tableStmt->fetch()) return;
+
+    $requiredColumns = [
+        'required_hours' => 'ALTER TABLE users ADD COLUMN required_hours DECIMAL(10,2) NOT NULL DEFAULT ' . DEFAULT_REQUIRED_HOURS,
+        'allowance_per_day' => 'ALTER TABLE users ADD COLUMN allowance_per_day DECIMAL(10,2) NOT NULL DEFAULT 0',
+        'currency' => "ALTER TABLE users ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'PHP'",
+        'security_question' => 'ALTER TABLE users ADD COLUMN security_question VARCHAR(255) NULL',
+        'security_answer' => 'ALTER TABLE users ADD COLUMN security_answer VARCHAR(255) NULL',
+        'email' => 'ALTER TABLE users ADD COLUMN email VARCHAR(255) NULL',
+    ];
+
+    foreach ($requiredColumns as $column => $sql) {
+        $colStmt = $pdo->prepare('SHOW COLUMNS FROM users LIKE ?');
+        $colStmt->execute([$column]);
+        if (!$colStmt->fetch()) {
+            $pdo->exec($sql);
+        }
+    }
 }
 
 // ── User helpers ──────────────────────────────────────────────
@@ -42,17 +78,8 @@ function get_user(string $username): ?array {
     // Attach logs
     $user['logs']           = get_logs($user['id']);
     $user['required_hours'] = (float) $user['required_hours'];
-    $user['allowance_per_day'] = (float) ($user['allowance_per_day'] ?? 150);
-    return $user;
-}
-
-function get_user_by_id(int $id): ?array {
-    $stmt = db()->prepare('SELECT * FROM users WHERE id = ?');
-    $stmt->execute([$id]);
-    $user = $stmt->fetch();
-    if (!$user) return null;
-    $user['logs']           = get_logs($user['id']);
-    $user['required_hours'] = (float) $user['required_hours'];
+    $user['allowance_per_day'] = (float) ($user['allowance_per_day'] ?? 0);
+    $user['currency']       = $user['currency'] ?? 'PHP';
     return $user;
 }
 
@@ -66,6 +93,7 @@ function save_user(array $user): void {
                 password          = ?,
                 required_hours    = ?,
                 allowance_per_day = ?,
+                currency          = ?,
                 security_question = ?,
                 security_answer   = ?,
                 email             = ?
@@ -74,8 +102,9 @@ function save_user(array $user): void {
         $stmt->execute([
             $user['name'],
             $user['password'],
-            $user['required_hours'] ?? 500,
-            $user['allowance_per_day'] ?? 150,
+            $user['required_hours'] ?? DEFAULT_REQUIRED_HOURS,
+            $user['allowance_per_day'] ?? 0,
+            $user['currency'] ?? 'PHP',
             $user['security_question'] ?? null,
             $user['security_answer']   ?? null,
             $user['email']             ?? null,
@@ -83,20 +112,32 @@ function save_user(array $user): void {
         ]);
     } else {
         $stmt = $db->prepare('
-            INSERT INTO users (name, username, password, required_hours, allowance_per_day, security_question, security_answer, email)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (name, username, password, required_hours, allowance_per_day, currency, security_question, security_answer, email)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ');
         $stmt->execute([
             $user['name'],
             $user['username'],
             $user['password'],
-            $user['required_hours']    ?? 500,
-            $user['allowance_per_day'] ?? 150,
+            $user['required_hours']    ?? DEFAULT_REQUIRED_HOURS,
+            $user['allowance_per_day'] ?? 0,
+            $user['currency']          ?? 'PHP',
             $user['security_question'] ?? null,
             $user['security_answer']   ?? null,
             $user['email']             ?? null,
         ]);
     }
+}
+
+// ── Currency helpers ───────────────────────────────────────────
+function get_currency_symbol(string $currency): string {
+    return match ($currency) {
+        'USD' => '$',
+        'EUR' => '€',
+        'GBP' => '£',
+        'PHP' => '₱',
+        default => '₱',
+    };
 }
 
 // ── Log helpers ───────────────────────────────────────────────
@@ -169,7 +210,7 @@ function current_user(): ?array {
 }
 
 function require_login(): void {
-    if (!is_logged_in()) { header('Location: index.php'); exit; }
+    if (!is_logged_in()) { header('Location: auth.php'); exit; }
 }
 
 function require_guest(): void {
@@ -201,11 +242,11 @@ function total_logged(array $user): float {
 }
 
 function hours_remaining(array $user): float {
-    return max(0, ($user['required_hours'] ?? 500) - total_logged($user));
+    return max(0, ($user['required_hours'] ?? DEFAULT_REQUIRED_HOURS) - total_logged($user));
 }
 
 function completion_percent(array $user): float {
-    $req = $user['required_hours'] ?? 500;
+    $req = $user['required_hours'] ?? DEFAULT_REQUIRED_HOURS;
     if ($req <= 0) return 100;
     return min(100, (total_logged($user) / $req) * 100);
 }
@@ -246,7 +287,16 @@ function get_security_question(string $username): ?string {
 function verify_security_answer(string $username, string $answer): bool {
     $user = get_user($username);
     if (!$user || !isset($user['security_answer'])) return false;
-    return strtolower(trim($answer)) === strtolower(trim($user['security_answer']));
+
+    $normalizedAnswer = strtolower(trim($answer));
+    $stored = (string) $user['security_answer'];
+
+    // Support both legacy plain-text answers and current hashed answers.
+    if (str_starts_with($stored, '$2y$') || str_starts_with($stored, '$argon2')) {
+        return verify_password($normalizedAnswer, $stored);
+    }
+
+    return hash_equals(strtolower(trim($stored)), $normalizedAnswer);
 }
 
 function e(string $str): string {
