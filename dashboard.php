@@ -133,18 +133,18 @@ include 'includes/header.php';
 
     <div class="dash-stat-card dash-stat-card--allowance">
       <div class="dash-stat-eyebrow">Allowance Summary</div>
-      <div class="dash-stat-num"><?= get_currency_symbol($user['currency']) ?><?= number_format($weekly_collected_allowance, 2) ?> <span class="dash-stat-denom">Collected This Week</span></div>
+      <div class="dash-stat-num"><?= get_currency_symbol($user['currency']) ?><?= number_format($weekly_collected_allowance, 0) ?> <span class="dash-stat-denom">Collected This Week</span></div>
       <div class="dash-stat-sub"><?= e($week_range_label) ?> · <?= $week_logged_days ?> day<?= $week_logged_days !== 1 ? 's' : '' ?> logged</div>
       
   <div class="allowance-split">
   <div class="allowance-split-item">
     <span class="allowance-split-label">Total Collected</span>
-    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($total_collected_allowance, 2) ?></span>
+    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($total_collected_allowance, 0) ?></span>
   </div>
   <div class="allowance-split-divider"></div>
   <div class="allowance-split-item">
     <span class="allowance-split-label">Projected Left</span>
-    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($remaining_money_by_days_left, 2) ?></span>
+    <span class="allowance-split-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($remaining_money_by_days_left, 0) ?></span>
   </div>
 </div>
       </div>
@@ -174,7 +174,7 @@ include 'includes/header.php';
                 <?php foreach ($recent_logs as $log): ?>
                 <tr class="dash-log-row">
                   <td class="font-600" data-label="Date"><?= e(date('M j, Y', strtotime($log['date']))) ?></td>
-                  <td data-label="Description"><?= e($log['description'] ?: '—') ?></td>
+                  <td data-label="Description"><span class="log-desc-text"><?= e($log['description'] ?: '—') ?></span></td>
                   <td class="tabular-nums" data-label="From"><?= e(date('g:i A', strtotime($log['from']))) ?></td>
                   <td class="tabular-nums" data-label="To"><?= e(date('g:i A', strtotime($log['to']))) ?></td>
                   <td data-label="Hrs"><span class="highlight-hrs"><?= e(number_format($log['hours'], 1)) ?></span></td>

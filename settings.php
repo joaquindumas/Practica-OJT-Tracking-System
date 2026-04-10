@@ -79,7 +79,7 @@ include 'includes/header.php';
 }
 .settings-lower-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 1.5rem;
     align-items: start;
 }
@@ -339,14 +339,6 @@ select.form-input-styled {
                 <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Update Password</button>
             </form>
 
-            <!-- Danger Zone / Logout -->
-            <div class="settings-card" style="border-color: #fecaca;">
-                <h2 class="settings-section-title" style="color:#dc2626;">Danger Zone</h2>
-                <div class="page-subtitle" style="margin-bottom: 1.25rem;">Sign out of your account on this device.</div>
-                <a href="logout.php" onclick="return confirm('Are you sure you want to log out?')" class="btn btn-danger">
-                    Log Out
-                </a>
-            </div>
         </div>
     </div>
 </div>

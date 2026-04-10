@@ -556,7 +556,7 @@
 .dash-log-table { width: 100%; border-collapse: collapse; min-width: 600px; table-layout: fixed; }
 .dash-log-table th,
 .dash-log-table td {
-    padding: 1rem 0.5rem;
+    padding: 0.875rem 0.5rem;
     font-size: 0.85rem;
     border-bottom: 1px solid #f8fafc;
     color: #1e293b;
@@ -568,8 +568,34 @@
     text-overflow: ellipsis;
 }
 
+.dash-log-table th:nth-child(1),
+.dash-log-table td:nth-child(1) {
+    text-align: left;
+}
+
+.dash-log-table th:nth-child(2),
+.dash-log-table td:nth-child(2) {
+    text-align: left;
+}
+
+.dash-log-table th:nth-child(3),
+.dash-log-table td:nth-child(3),
+.dash-log-table th:nth-child(4),
+.dash-log-table td:nth-child(4),
+.dash-log-table th:nth-child(5),
+.dash-log-table td:nth-child(5) {
+    text-align: center;
+}
+
+.dash-log-table th:nth-child(6),
+.dash-log-table td:nth-child(6) {
+    text-align: center;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
 .dash-log-table th {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -579,6 +605,18 @@
 
 .dash-log-table td:nth-child(2) {
     max-width: 100%;
+}
+
+.dash-log-table .log-desc-text {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dash-log-table tbody td:nth-child(6) > div {
+    justify-content: center !important;
 }
 
 .dash-log-row:hover td { background: #f8fafc; }
@@ -885,7 +923,8 @@
     }
 
     .table-wrap {
-        overflow: visible;
+        width: 100%;
+        overflow-x: hidden;
     }
 
     .dash-log-table,
@@ -898,7 +937,14 @@
     }
 
     .dash-log-table {
+        width: 100%;
+        max-width: 100%;
         min-width: 0;
+        table-layout: fixed;
+    }
+
+    .dash-log-table colgroup {
+        display: none;
     }
 
     .dash-log-table thead {
@@ -913,17 +959,37 @@
     }
 
     .dash-log-table tbody {
-        display: grid;
-        gap: 0.7rem;
+        display: block;
+        width: 100%;
     }
 
     .dash-log-row {
-        padding: 0.8rem 0.82rem 0.72rem;
+        display: block;
+        padding: 1.02rem 0.92rem 0.9rem;
+        margin-bottom: 0.62rem;
         border: 1px solid #e2e8f0;
-        border-radius: 1rem;
-        background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
-        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
-        border-left: 4px solid rgba(27, 67, 50, 0.18);
+        border-radius: 0.88rem;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%);
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.05);
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .dash-log-row::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.6rem;
+        bottom: 0.6rem;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: rgba(34, 197, 94, 0.25);
+    }
+
+    .dash-log-row:last-child {
+        margin-bottom: 0;
     }
 
     .dash-log-table td {
@@ -932,39 +998,68 @@
         white-space: normal;
         overflow: visible;
         text-overflow: clip;
+        font-size: 0.8rem;
+        line-height: 1.35;
+        color: #1e293b;
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 0.75rem;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        word-break: break-word;
+        margin-bottom: 0.48rem;
+    }
+
+    .dash-log-table td > * {
+        min-width: 0;
+    }
+
+    .dash-log-table td > :last-child {
+        text-align: right;
     }
 
     .dash-log-table td::before {
         content: attr(data-label);
-        font-size: 0.62rem;
+        font-size: 0.58rem;
         font-weight: 800;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         color: #94a3b8;
         flex: 0 0 auto;
-        padding-top: 0.2rem;
+        padding-right: 0.25rem;
     }
 
     .dash-log-table td:nth-child(1) {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
         padding-bottom: 0.5rem;
         border-bottom: 1px solid #eef2f7;
-        margin-bottom: 0.5rem;
-        align-items: center;
+        margin-bottom: 0.56rem;
+        align-items: flex-start;
     }
 
     .dash-log-table td:nth-child(1)::before {
         color: #2d6a4f;
+        padding-top: 0;
     }
 
     .dash-log-table td:nth-child(2) {
+        color: #475569;
+        font-size: 0.78rem;
         margin-bottom: 0.45rem;
-        font-size: 0.92rem;
-        line-height: 1.32;
-        color: #0f172a;
+    }
+
+    .dash-log-table td:nth-child(2) .log-desc-text {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        max-width: min(62vw, 220px);
+        text-align: right;
     }
 
     .dash-log-table td:nth-child(2)::before {
@@ -972,21 +1067,39 @@
     }
 
     .dash-log-table td:nth-child(5) {
+        padding-right: 0;
         margin-top: 0.1rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0;
+    }
+
+    .dash-log-table td:nth-child(3),
+    .dash-log-table td:nth-child(4) {
+        color: #334155;
     }
 
     .dash-log-table td:nth-child(5)::before {
         padding-top: 0.18rem;
     }
 
-    .dash-log-table td:nth-child(6) {
-        justify-content: flex-end;
-        margin-top: 0.15rem;
-    }
-
+   .dash-log-table td:nth-child(6) {
+    position: static;           /* remove absolute */
+    width: 100%;
+    justify-content: flex-end;  /* push buttons to the right */
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #eef2f7;
+    padding: 0.5rem 0 0 0;
+    margin-bottom: 0;
+    gap: 0;
+}
     .dash-log-table td:nth-child(6)::before {
         display: none;
+    }
+
+    .dash-log-table td:nth-child(6) > div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .dash-log-row:hover td {
@@ -999,8 +1112,15 @@
     }
 
     .action-btn {
-        padding: 0.4rem;
-        border-radius: 0.55rem;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #2d6a4f;
+        padding: 0;
+        min-width: 0;
+        min-height: 0;
     }
 
     .action-btn svg {

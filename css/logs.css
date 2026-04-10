@@ -59,79 +59,80 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     gap: 1rem; /* was 16px — 1rem = fluid root size */
 }
 .dash-hero.logs-hero {
-    padding: 2rem 2.5rem;
+    padding: 1.35rem 1.6rem;
     background: #ffffff;
     border-radius: 1.25rem;
     border: 1px solid rgba(226, 232, 240, 0.6);
     box-shadow: var(--shadow-sm);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    column-gap: 1rem;
-    row-gap: 1rem;
+    flex-wrap: nowrap;
+    gap: 1.25rem;
 }
 
 .page-title-group,
-.logs-hero-content { display: flex; flex-direction: column; gap: 2px; flex: 0 0 auto; }
+.logs-hero-content { display: flex; flex-direction: column; gap: 0.65rem; flex: 1 1 0; min-width: 0; }
 
 .logs-hero-content {
-    flex: 1 1 auto;
-    min-width: 0;
+    width: auto;
 }
 
 /* was: font-size: var(--text-xs) — keeping theme vars but note they should also use rem */
 .page-eyebrow,
 .dash-hero-eyebrow {
-    font-size: clamp(0.65rem, 1vw, 0.75rem); /* fluid between 10px–12px */
-    font-weight: 700;
+    font-size: 0.7rem;
+    font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #2d6a4f;
-    margin: 0 0 2px 0;
+    margin-bottom: 0.25rem;
 }
 .page-subtitle,
 .dash-hero-sub.logs-hero-sub {
-    font-size: clamp(0.8rem, 1.2vw, 0.875rem); /* fluid: ~13–14px */
+    font-size: 0.95rem;
     color: #64748b;
-    font-weight: 400;
-    margin: 4px 0 0 0;
+    margin-top: 0.5rem;
+    line-height: 1.6;
 }
 .page-title,
 .dash-hero-title.logs-hero-title {
     display: flex;
     align-items: center;
-    gap: 0.5rem; /* was 8px */
-    /* clamp: min 1.4rem (~22px), scales w/ viewport, max 2rem (~32px) */
-    font-size: clamp(1.4rem, 3vw, 2rem);
+    gap: 0.5rem;
+    font-size: clamp(1.85rem, 2.8vw, 2.35rem);
     font-weight: 800;
-    color: var(--text);
+    color: #1e293b;
     margin: 0;
     line-height: 1.1;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
 }
 .page-title-icon { font-size: 0.85em; } /* em = relative to .page-title's font-size ✓ */
 .page-actions,
 .dash-hero-actions.logs-hero-actions {
     display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.dash-hero-actions.logs-hero-actions {
     gap: 0.625rem;
     align-items: center;
-    flex-shrink: 0;
     flex-wrap: nowrap;
-    margin-top: 4px;
+    margin-top: 0;
     margin-left: auto;
-    justify-self: end;
+    align-self: center;
+    justify-content: flex-end;
+    max-width: 100%;
 }
 
 @media (max-width: 1120px) {
-    .dash-hero.logs-hero {
-        grid-template-columns: 1fr;
-        align-items: flex-start;
-    }
-
     .dash-hero-actions.logs-hero-actions {
         width: 100%;
         margin-left: 0;
-        justify-self: start;
+        justify-content: flex-start;
         flex-wrap: wrap;
     }
 }
@@ -258,12 +259,52 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     border-bottom: 1px solid #f1f5f9;
     border-right: 1px solid #f1f5f9;
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background-color 0.15s ease;
+}
+
+.new-cal-cell--today {
+    position: relative;
+    background: linear-gradient(180deg, rgba(236, 253, 245, 0.96) 0%, rgba(249, 255, 251, 1) 100%);
+    border-color: rgba(34, 197, 94, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12);
+}
+
+.new-cal-cell--adjacent {
+    background: #fcfdff;
+}
+
+.new-cal-date-stack {
     display: flex;
     flex-direction: column;
-    background: #ffffff;
-    box-sizing: border-box;
-    overflow-y: auto;
+    align-items: flex-start;
+    gap: 0.2rem;
+}
+
+.new-cal-today-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.54rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #166534;
+    background: #d1fae5;
+    border: 1px solid rgba(22, 101, 52, 0.12);
+    border-radius: 999px;
+    padding: 0.18rem 0.42rem;
+    white-space: nowrap;
+}
+
+.new-cal-date--today {
+    color: #14532d;
+    font-weight: 800;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.new-cal-date--adjacent {
+    color: #d6deea;
+    opacity: 0.72;
+    font-size: 0.72rem;
 }
 
 /* was: font-size: var(--text-xs); padding: 12px — rigid px */
@@ -282,6 +323,10 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 .new-cal-cell:hover { background: #f8fafc; }
 .new-cal-cell.empty { background: transparent; cursor: default; }
 .new-cal-cell.cal-selected { background: #fef2f2 !important; }
+
+.pill-logged--adjacent {
+    opacity: 0.45;
+}
 
 .new-cal-date {
     font-size: clamp(0.7rem, 1vw, 0.875rem); /* fluid date number */
@@ -324,8 +369,8 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 }
 
 .log-table th {
-    padding: 1rem 0.5rem;
-    font-size: 0.7rem;
+    padding: 0.875rem 0.5rem;
+    font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -335,7 +380,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     white-space: nowrap;
 }
 .log-table td {
-    padding: 1rem 0.5rem;
+    padding: 0.875rem 0.5rem;
     font-size: 0.85rem;
     color: #1e293b;
     font-weight: 500;
@@ -346,11 +391,39 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     text-overflow: ellipsis;
     transition: background 0.15s;
 }
+.log-table th:nth-child(1),
+.log-table td:nth-child(1),
+.log-table th:nth-child(2),
+.log-table td:nth-child(2) {
+    text-align: left;
+}
+
+.log-table th:nth-child(3),
+.log-table td:nth-child(3),
+.log-table th:nth-child(4),
+.log-table td:nth-child(4),
+.log-table th:nth-child(5),
+.log-table td:nth-child(5) {
+    text-align: center;
+}
+
+.log-table th:nth-child(6),
+.log-table td:nth-child(6),
+.log-table th:nth-child(7),
+.log-table td:nth-child(7) {
+    text-align: center;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+.log-table tbody td:nth-child(7) > div {
+    justify-content: center !important;
+}
 .log-table tbody tr:last-child td { border-bottom: none; }
 .log-table tbody tr:hover td { background: #fafafa; }
 .log-table tbody tr td:first-child { border-left: 3px solid transparent; transition: border-color 0.15s; }
 .log-table tbody tr:hover td:first-child { border-left-color: #6ee7b7; }
-.log-table th.col-hrs, .log-table td.col-hrs { text-align: left; }
+.log-table th.col-hrs, .log-table td.col-hrs { text-align: center; }
 .log-table td.col-hrs { font-weight: 800; }
 .log-table tbody tr.row-selected { background-color: #fef2f2 !important; }
 .log-table tbody tr.row-selected td { border-color: #fecaca; color: #7f1d1d; }
@@ -576,6 +649,18 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     background: rgba(15, 23, 42, 0.58);
 }
 
+.tutorial-spotlight {
+    position: fixed;
+    z-index: 1200;
+    pointer-events: none;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    border: 2px solid rgba(74, 222, 128, 0.92);
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.58), 0 10px 30px rgba(15, 23, 42, 0.32);
+    transition: top 0.22s ease, left 0.22s ease, width 0.22s ease, height 0.22s ease, border-radius 0.22s ease, opacity 0.18s ease;
+}
+
 .tutorial-card {
     position: fixed;
     z-index: 1205;
@@ -634,6 +719,10 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 }
 
 @media (max-width: 768px) {
+    .tutorial-spotlight {
+        display: none;
+    }
+
     .tutorial-card {
         left: 12px !important;
         right: 12px;
@@ -753,6 +842,31 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         background: #ffffff;
     }
 
+    .new-cal-cell--today {
+        background: linear-gradient(180deg, rgba(236, 253, 245, 0.98) 0%, rgba(245, 255, 249, 1) 100%);
+        border-color: rgba(34, 197, 94, 0.22);
+        box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.10);
+    }
+
+    .new-cal-cell--adjacent {
+        background: #fcfdff;
+    }
+
+    .new-cal-today-badge {
+        font-size: 0.5rem;
+        padding: 0.16rem 0.34rem;
+    }
+
+    .new-cal-date--today {
+        color: #166534;
+    }
+
+    .new-cal-date--adjacent {
+        color: #d6deea;
+        opacity: 0.72;
+        font-size: 0.64rem;
+    }
+
     .new-cal-cell:hover {
         background: #fbfdff;
     }
@@ -804,8 +918,9 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     }
 
     .log-table tbody tr {
-        display: block;
-        padding: 1.14rem 0.92rem 0.94rem 2.18rem;
+        display: flex;
+        flex-direction: column;
+        padding: 1.14rem 0.92rem 0.7rem 2.18rem;
         margin-bottom: 0.62rem;
         border: 1px solid #e2e8f0;
         border-radius: 0.88rem;
@@ -867,6 +982,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         gap: 0.75rem;
         min-width: 0;
         margin-bottom: 0.48rem;
+        box-sizing: border-box;
     }
 
     .log-table td::before {
@@ -890,6 +1006,8 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         overflow: visible;
         text-overflow: clip;
         margin-bottom: 0.56rem;
+        border-bottom: 1px solid #eef2f7;
+        padding-bottom: 0.5rem;
     }
 
     .log-table .log-cell--desc,
@@ -908,6 +1026,13 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         color: #475569;
         font-size: 0.78rem;
         word-break: break-word;
+        margin-bottom: 0.45rem;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        max-width: min(62vw, 220px);
+        text-align: right;
     }
 
     .log-table .log-cell--desc::before {
@@ -926,7 +1051,9 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-right: 2.35rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid #eef2f7;
+        padding-right: 0;
         margin-bottom: 0;
     }
 
@@ -950,13 +1077,16 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 
     .log-table .log-cell--actions {
         position: absolute;
-        right: 0.56rem;
-        bottom: 0.54rem;
+        right: 0.7rem;
+        bottom: 0.7rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        width: auto;
         margin-top: 0;
         margin-bottom: 0;
+        padding: 0;
+        gap: 0;
     }
 
     .log-table .log-cell--actions .icon-btn {
@@ -967,12 +1097,21 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         border: 1px solid #e2e8f0;
         color: #2d6a4f;
         padding: 0;
+        min-width: 0;
+        min-height: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .log-table .highlight-hrs {
         font-size: 0.82rem;
-        padding: 0.23rem 0.56rem;
-        border-radius: 999px;
+        padding: 0.2rem 0.42rem;
+        border-radius: 0.5rem;
+        background: #ecfdf5;
+        color: #059669;
+        font-weight: 800;
+        display: inline-block;
     }
 
     .log-table tbody tr:hover td {
@@ -981,6 +1120,33 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 
     .log-table tbody tr.row-selected {
         background: #fef2f2 !important;
+            /* Card style for each log row */
+            .log-table tbody tr {
+                display: block;
+                padding: 1.02rem 0.92rem 3.2rem;
+                margin-bottom: 0.62rem;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.88rem;
+                background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%);
+                box-shadow: 0 10px 18px rgba(15, 23, 42, 0.05);
+                width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+                position: relative;
+            }
+            .log-table tbody tr:last-child {
+                margin-bottom: 0;
+            }
+            .log-table tbody tr::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0.6rem;
+                bottom: 0.6rem;
+                width: 3px;
+                border-radius: 0 3px 3px 0;
+                background: rgba(34, 197, 94, 0.25);
+            }
         border-color: #fecaca;
         box-shadow: 0 10px 20px rgba(220, 38, 38, 0.1);
     }
@@ -1540,6 +1706,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 @media (max-width: 480px) {
     .log-table tbody tr {
         padding: 1.12rem 0.84rem 0.92rem 2.02rem;
+        padding-bottom: 3rem;
     }
 
     .new-cal-grid {
@@ -1598,4 +1765,3 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     .page-actions .btn-label,
     .dash-hero-actions.logs-hero-actions .btn-label { display: inline; }
 }
-

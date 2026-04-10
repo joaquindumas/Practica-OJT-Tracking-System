@@ -55,6 +55,7 @@ $log_map = []; foreach ($all_logs as $l) { $log_map[$l['date']][] = $l; }
 $logs_per_page = 6;
 $current_page = max(1, intval($_GET['page'] ?? 1));
 $total_logs = count($all_logs);
+$is_first_time_logs_user = ($total_logs === 0);
 $total_pages = ceil($total_logs / $logs_per_page);
 if ($current_page > $total_pages && $total_pages > 0) $current_page = $total_pages;
 $paginated_logs = array_slice($all_logs, ($current_page - 1) * $logs_per_page, $logs_per_page);
@@ -68,6 +69,8 @@ $next_month = date('Y-m', mktime(0, 0, 0, $cal_month + 1, 1, $cal_year));
 $today = date('Y-m-d'); 
 $first_dow_zero_indexed = (int) date('w', $first_date_ts); 
 $days_in_month = (int) date('t', $first_date_ts);
+$calendar_start_ts = strtotime('-' . $first_dow_zero_indexed . ' days', $first_date_ts);
+$calendar_total_cells = 42;
 
 include 'includes/header.php';
 ?>
@@ -86,7 +89,7 @@ include 'includes/header.php';
         <div class="dash-hero-actions logs-hero-actions">
             <button type="button" class="btn btn-outline" id="start-log-tutorial-btn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                <span class="btn-label">How to Add Previous Logs</span>
+                <span class="btn-label">Take a Tour </span>
             </button>
             <button type="button" class="btn btn-outline" id="view-toggle-btn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -120,16 +123,24 @@ include 'includes/header.php';
             <div class="new-cal-wrapper">
                 <div class="new-cal-grid">
                     <div class="new-cal-dow">SUN</div><div class="new-cal-dow">MON</div><div class="new-cal-dow">TUE</div><div class="new-cal-dow">WED</div><div class="new-cal-dow">THU</div><div class="new-cal-dow">FRI</div><div class="new-cal-dow">SAT</div>
-                    <?php for ($e = 0; $e < $first_dow_zero_indexed; $e++): ?><div class="new-cal-cell empty"></div><?php endfor; ?>
-                    <?php for ($d = 1; $d <= $days_in_month; $d++):
-                        $date_str = sprintf('%04d-%02d-%02d', $cal_year, $cal_month, $d);
+                    <?php for ($i = 0; $i < $calendar_total_cells; $i++):
+                        $cell_ts = strtotime('+' . $i . ' days', $calendar_start_ts);
+                        $date_str = date('Y-m-d', $cell_ts);
+                        $cell_day = (int) date('j', $cell_ts);
+                        $cell_month = (int) date('n', $cell_ts);
+                        $is_current_month = ($cell_month === $cal_month);
+                        $is_adjacent_month = !$is_current_month;
                         $day_logs = $log_map[$date_str] ?? [];
                         $is_logged = count($day_logs) > 0;
                         $total_day = array_sum(array_column($day_logs, 'hours'));
+                        $is_today = ($date_str === $today);
                     ?>
-                        <div class="new-cal-cell" onclick="handleDayClick('<?= $date_str ?>', <?= $is_logged ? 'true' : 'false' ?>)">
-                            <div class="new-cal-date-row" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
-                                <span class="new-cal-date" <?= ($date_str == date('Y-m-d')) ? 'style="color:#1b4332;font-weight:800;"' : '' ?>><?= $d ?></span>
+                        <div class="new-cal-cell<?= $is_today ? ' new-cal-cell--today' : '' ?><?= $is_adjacent_month ? ' new-cal-cell--adjacent' : '' ?>" onclick="handleDayClick('<?= $date_str ?>', <?= $is_logged ? 'true' : 'false' ?>)">
+                            <div class="new-cal-date-row" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;gap:0.5rem;">
+                                <div class="new-cal-date-stack">
+                                    <span class="new-cal-date<?= $is_today ? ' new-cal-date--today' : '' ?><?= $is_adjacent_month ? ' new-cal-date--adjacent' : '' ?>" <?= ($date_str == date('Y-m-d')) ? 'style="color:#1b4332;font-weight:800;"' : '' ?>><?= $cell_day ?></span>
+                                    <?php if ($is_today): ?><span class="new-cal-today-badge">TODAY</span><?php endif; ?>
+                                </div>
                                 <?php if ($is_logged):
                                     $day_log_ids = implode(',', array_column($day_logs, 'id'));
                                 ?>
@@ -137,7 +148,7 @@ include 'includes/header.php';
                                 <?php endif; ?>
                             </div>
                             <?php if ($is_logged): ?>
-                                <div class="pill-logged"><?= number_format($total_day, 1) ?> hrs</div>
+                                <div class="pill-logged<?= $is_adjacent_month ? ' pill-logged--adjacent' : '' ?>"><?= number_format($total_day, 1) ?> hrs</div>
                             <?php endif; ?>
                         </div>
                     <?php endfor; ?>
@@ -293,6 +304,7 @@ include 'includes/header.php';
 
 <div id="logs-tutorial-overlay" class="tutorial-overlay" aria-hidden="true">
     <div class="tutorial-backdrop"></div>
+    <div class="tutorial-spotlight" id="tutorial-spotlight" aria-hidden="true"></div>
     <div class="tutorial-card" id="logs-tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-step-title">
         <div class="tutorial-step-count" id="tutorial-step-count">Step 1 of 1</div>
         <h3 class="tutorial-step-title" id="tutorial-step-title">Tutorial</h3>
@@ -646,8 +658,11 @@ const tutorialPrevBtn = document.getElementById('tutorial-prev-btn');
 const tutorialSkipBtn = document.getElementById('tutorial-skip-btn');
 const tutorialNextBtn = document.getElementById('tutorial-next-btn');
 const tutorialStartBtn = document.getElementById('start-log-tutorial-btn');
+const tutorialSpotlight = document.getElementById('tutorial-spotlight');
 const TUTORIAL_STORAGE_KEY = 'logs_previous_tutorial_done_v1_<?= (int) ($user['id'] ?? 0) ?>';
+const TUTORIAL_AUTORUN_SEEN_KEY = 'logs_previous_tutorial_autorun_seen_v1_<?= (int) ($user['id'] ?? 0) ?>';
 const forceTutorial = <?= $force_tutorial ? 'true' : 'false' ?>;
+const isFirstTimeLogsUser = <?= $is_first_time_logs_user ? 'true' : 'false' ?>;
 
 let tutorialStepIndex = 0;
 let tutorialFocusedEl = null;
@@ -668,8 +683,60 @@ function markTutorialCompleted() {
     }
 }
 
+function hasSeenTutorialAutoRun() {
+    try {
+        return localStorage.getItem(TUTORIAL_AUTORUN_SEEN_KEY) === '1';
+    } catch (e) {
+        return false;
+    }
+}
+
+function markTutorialAutoRunSeen() {
+    try {
+        localStorage.setItem(TUTORIAL_AUTORUN_SEEN_KEY, '1');
+    } catch (e) {
+        // Ignore storage failures.
+    }
+}
+
 function closeAllLogModals() {
     [logModal, editModal, bulkModal, dayModal].forEach(m => m?.classList.remove('open'));
+}
+
+function hideTutorialSpotlight() {
+    if (!tutorialSpotlight) return;
+    tutorialSpotlight.style.opacity = '0';
+    tutorialSpotlight.style.width = '0px';
+    tutorialSpotlight.style.height = '0px';
+}
+
+function showTutorialSpotlight(targetEl) {
+    if (!tutorialSpotlight || !targetEl) {
+        hideTutorialSpotlight();
+        return;
+    }
+
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+        hideTutorialSpotlight();
+        return;
+    }
+
+    const rect = targetEl.getBoundingClientRect();
+    const pad = 10;
+    const left = Math.max(8, rect.left - pad);
+    const top = Math.max(8, rect.top - pad);
+    const width = Math.min(window.innerWidth - left - 8, rect.width + (pad * 2));
+    const height = Math.min(window.innerHeight - top - 8, rect.height + (pad * 2));
+
+    const computedRadius = parseFloat(window.getComputedStyle(targetEl).borderRadius || '10') || 10;
+
+    tutorialSpotlight.style.left = `${Math.round(left)}px`;
+    tutorialSpotlight.style.top = `${Math.round(top)}px`;
+    tutorialSpotlight.style.width = `${Math.round(width)}px`;
+    tutorialSpotlight.style.height = `${Math.round(height)}px`;
+    tutorialSpotlight.style.borderRadius = `${Math.max(10, computedRadius + 8)}px`;
+    tutorialSpotlight.style.opacity = '1';
 }
 
 function setLogsView(mode) {
@@ -691,7 +758,7 @@ function setLogsView(mode) {
 const tutorialSteps = [
     {
         title: 'Welcome',
-        body: 'This short guide shows how to add past OJT logs using single entry and bulk entry.',
+        body: 'This short guide walks you through everything you can do on the Time Logs page.',
         selector: '#start-log-tutorial-btn'
     },
     {
@@ -740,7 +807,7 @@ const tutorialSteps = [
     },
     {
         title: 'You are Ready',
-        body: 'You can reopen this guide anytime using How to Add Previous Logs.',
+        body: 'You can reopen this guide anytime using the Take a Tour button.',
         selector: '#start-log-tutorial-btn',
         prepare: () => closeAllLogModals()
     }
@@ -752,6 +819,7 @@ function clearTutorialFocus() {
         tutorialFocusedEl.classList.remove('tutorial-focus--strong');
     }
     tutorialFocusedEl = null;
+    hideTutorialSpotlight();
 }
 
 function positionTutorialCard(targetEl) {
@@ -854,6 +922,16 @@ function renderTutorialStep() {
         tutorialFocusedEl.classList.add('tutorial-focus');
         tutorialFocusedEl.classList.add('tutorial-focus--strong');
         tutorialFocusedEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        showTutorialSpotlight(targetEl);
+
+        // Reposition after smooth scrolling settles.
+        setTimeout(() => {
+            if (!tutorialOverlay?.classList.contains('open') || tutorialFocusedEl !== targetEl) return;
+            showTutorialSpotlight(targetEl);
+            positionTutorialCard(targetEl);
+        }, 220);
+    } else {
+        hideTutorialSpotlight();
     }
     positionTutorialCard(targetEl);
 }
@@ -892,6 +970,7 @@ tutorialNextBtn?.addEventListener('click', () => {
 tutorialSkipBtn?.addEventListener('click', () => closeTutorial(true));
 window.addEventListener('resize', () => {
     if (!tutorialOverlay?.classList.contains('open') || !tutorialFocusedEl) return;
+    showTutorialSpotlight(tutorialFocusedEl);
     positionTutorialCard(tutorialFocusedEl);
 });
 window.addEventListener('keydown', e => {
@@ -900,7 +979,12 @@ window.addEventListener('keydown', e => {
 });
 
 setTimeout(() => {
-    if (forceTutorial || !hasCompletedTutorial()) openTutorial();
+    if (forceTutorial) {
+        openTutorial();
+    } else if (isFirstTimeLogsUser && !hasSeenTutorialAutoRun()) {
+        markTutorialAutoRunSeen();
+        openTutorial();
+    }
 
     if (forceTutorial && window.history?.replaceState) {
         const cleanUrl = new URL(window.location.href);
