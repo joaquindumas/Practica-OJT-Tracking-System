@@ -1,8 +1,3 @@
-/* ============================================================
-   dashboard.css — Option E: Colorful Gradient per Card
-   Each stat card has its own bold gradient personality
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 .dash-wrap * { font-family: 'DM Sans', sans-serif !important; }
@@ -1056,7 +1051,7 @@
         white-space: normal;
         display: -webkit-box;
         -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
+        line-clamp: 2;
         overflow: hidden;
         max-width: min(62vw, 220px);
         text-align: right;

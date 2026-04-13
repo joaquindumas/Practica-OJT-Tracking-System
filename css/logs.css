@@ -1023,18 +1023,15 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     }
 
     .log-table .log-cell--desc {
-        color: #475569;
-        font-size: 0.78rem;
-        word-break: break-word;
-        margin-bottom: 0.45rem;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        overflow: hidden;
-        max-width: min(62vw, 220px);
-        text-align: right;
-    }
-
+    color: #475569;
+    font-size: 0.78rem;
+    word-break: break-word;
+    margin-bottom: 0.45rem;
+    display: flex;
+    overflow: visible;
+    max-width: 100%;
+    text-align: left;
+}
     .log-table .log-cell--desc::before {
         content: "Description";
     }
@@ -1705,7 +1702,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
 /* When buttons are tight — hide text, show icon only */
 @media (max-width: 480px) {
     .log-table tbody tr {
-        padding: 1.12rem 0.84rem 0.92rem 2.02rem;
+        padding: 1.12rem 0.84rem 1.14rem 2.02rem;
         padding-bottom: 3rem;
     }
 
