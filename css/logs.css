@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+.log-table .log-cell--date .log-date-mobile { display: none; }
+.m-date-scroller { display: none; }
+
 /*
  * ─────────────────────────────────────────────────────────────────────────────
  * RESPONSIVE DESIGN — THE CORE PHILOSOPHY
@@ -29,6 +32,12 @@
 }
 
 html { font-size: var(--base-size); }  /* rem is now anchored to this fluid value */
+.mobile-topbar, .mobile-topbar *, .bottom-tab-bar, .bottom-tab-bar * { font-size: revert; }
+.mobile-topbar { font-size: 16px !important; }
+.mobile-topbar .mobile-topbar-name { font-size: 16px !important; }
+.mobile-topbar .mobile-topbar-version { font-size: 10px !important; }
+.bottom-tab-bar { font-size: 16px !important; }
+.bottom-tab-bar .bottom-tab span { font-size: 11px !important; }
 
 .dash-wrap * { font-family: 'DM Sans', sans-serif !important; }
 
@@ -753,12 +762,184 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     }
 
     .page-header,
-    .dash-hero.logs-hero { flex-direction: column; align-items: flex-start; gap: 1rem; }
-    .dash-hero.logs-hero { padding: 1.5rem; }
+    .dash-hero.logs-hero { flex-direction: row; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: nowrap; overflow: visible; }
+    .dash-hero.logs-hero {
+        padding: 0.5rem 0 0.75rem;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        margin-bottom: 0;
+        overflow: visible;
+    }
+    .dash-hero.logs-hero .dash-hero-eyebrow { display: none; }
+    .dash-hero.logs-hero .dash-hero-content { flex: none; width: auto; min-width: 0; }
+    .dash-hero.logs-hero .logs-hero-title {
+        font-size: 1.75rem;
+        margin: 0;
+        font-weight: 700;
+    }
+    .dash-hero.logs-hero .logs-hero-title .page-title-icon { display: none; }
+    .dash-hero.logs-hero .logs-hero-sub { display: none; }
     .page-actions,
-    .dash-hero-actions.logs-hero-actions { width: 100%; flex-wrap: nowrap; margin-top: 0; }
-    .page-actions .btn,
-    .dash-hero-actions.logs-hero-actions .btn { flex: 1; justify-content: center; }
+    .dash-hero-actions.logs-hero-actions {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 0;
+        width: auto !important;
+        flex-shrink: 0;
+        flex-wrap: nowrap;
+    }
+    /* Show all action buttons */
+    #start-log-tutorial-btn { display: inline-flex !important; }
+    #open-bulk-btn { display: inline-flex !important; }
+    .dash-hero-actions.logs-hero-actions .btn {
+        justify-content: center;
+        padding: 0 !important;
+        font-size: 0 !important;
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        min-height: 42px !important;
+        border-radius: 10px;
+        flex: none !important;
+    }
+    .dash-hero-actions.logs-hero-actions .btn svg { margin: 0; width: 18px; height: 18px; }
+    .dash-hero-actions.logs-hero-actions .btn .btn-label { display: none; }
+    .dash-hero-actions.logs-hero-actions .btn-primary {
+        background: #1b4332;
+        width: 42px !important;
+        height: 42px !important;
+        padding: 0 !important;
+        border-radius: 10px;
+    }
+
+    /* Match dashboard beige bg */
+    .dash-wrap { background: #f5f3ef; }
+    .content { background: #f5f3ef; }
+
+    /* Mobile date scroller */
+    .m-date-scroller { display: none; }
+
+    /* ── Compact calendar for mobile ── */
+    .new-cal-card {
+        border-radius: 1rem;
+        padding: 0.75rem;
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,0.04);
+    }
+    .new-cal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.6rem;
+        padding: 0 0.25rem;
+    }
+    .new-cal-header h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a2e20;
+    }
+    .new-cal-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .new-cal-nav .btn-today {
+        font-size: 0.75rem;
+        height: 2.2em;
+        padding: 0 1.2rem;
+        line-height: 2.2em;
+    }
+    .new-cal-nav a:not(.btn-today) {
+        width: 2.2em !important;
+        height: 2.2em !important;
+        font-size: 1rem !important;
+    }
+    .new-cal-nav a {
+        font-size: 0.85rem !important;
+    }
+    .new-cal-wrapper {
+        overflow-x: hidden;
+    }
+    .new-cal-grid {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        min-width: 0 !important;
+        gap: 0 !important;
+        border: none !important;
+    }
+    .new-cal-dow {
+        font-size: 0.55rem !important;
+        font-weight: 600;
+        color: #94a3b8;
+        text-align: center;
+        padding: 0.3rem 0 !important;
+        border: none !important;
+    }
+    .new-cal-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0.15rem !important;
+        border: none !important;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        min-height: 64px !important;
+        height: 64px !important;
+        position: relative;
+    }
+    .new-cal-cell .new-cal-date-row {
+        display: flex !important;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 0 !important;
+        gap: 0 !important;
+    }
+    .new-cal-cell .new-cal-date-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .new-cal-date {
+        font-size: 0.9rem !important;
+        font-weight: 600;
+        color: #334155;
+        padding: 0 !important;
+    }
+    .new-cal-date--adjacent {
+        color: #cbd5e1 !important;
+    }
+    .new-cal-cell--today {
+        background: #1b4332 !important;
+        border-radius: 0.5rem !important;
+    }
+    .new-cal-cell--today .new-cal-date {
+        color: #ffffff !important;
+    }
+    .new-cal-today-badge {
+        display: none !important;
+    }
+    .new-cal-cell .pill-logged {
+        font-size: 0.6rem !important;
+        padding: 0.15rem 0.4rem !important;
+        border: none !important;
+        background: #d1fae5 !important;
+        color: #1b4332;
+        font-weight: 700;
+        border-radius: 999px;
+        line-height: 1;
+        position: absolute;
+        bottom: 5px;
+    }
+    .new-cal-cell .pill-logged::before { display: none; }
+    .new-cal-cell .cal-checkbox,
+    .new-cal-cell .custom-checkbox {
+        display: none !important;
+    }
 
     .new-cal-grid {
         min-width: 560px;
@@ -897,8 +1078,11 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     }
 
     .list-table-wrap {
-        padding: 1rem 0.78rem 0.88rem;
-        border-radius: 1.15rem;
+        padding: 0.25rem 0;
+        border-radius: 1rem;
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,0.04);
+        overflow: hidden;
     }
 
     .table-scroll {
@@ -918,181 +1102,139 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     }
 
     .log-table tbody tr {
-        display: flex;
-        flex-direction: column;
-        padding: 1.14rem 0.92rem 0.7rem 2.18rem;
-        margin-bottom: 0.62rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.88rem;
-        background: linear-gradient(180deg, #ffffff 0%, #fbfdfc 100%);
-        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.05);
+        display: grid;
+        grid-template-columns: 10px 1fr auto auto;
+        grid-template-rows: min-content min-content;
+        align-items: center;
+        column-gap: 0.5rem;
+        row-gap: 0.02rem;
+        padding: 12px 14px;
+        margin-bottom: 0;
+        border: none;
+        border-bottom: 1px solid #f5f3ef;
+        border-radius: 0;
+        background: #ffffff;
+        box-shadow: none;
         position: relative;
+        text-align: left;
     }
 
-    .log-table tbody tr::after {
+    .log-table tbody tr::before {
         content: "";
-        position: absolute;
-        left: 0;
-        top: 0.6rem;
-        bottom: 0.6rem;
-        width: 3px;
-        border-radius: 0 3px 3px 0;
-        background: rgba(34, 197, 94, 0.25);
+        grid-row: 1 / 3;
+        grid-column: 1;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2d6a4f;
+        align-self: center;
     }
 
-    .log-table tbody tr:nth-child(even) {
-        background: linear-gradient(180deg, #ffffff 0%, #f8fcfb 100%);
-    }
-
-    .log-table tbody tr:nth-child(odd) {
-        background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
-    }
-
+    .log-table tbody tr::after { display: none; }
+    .log-table tbody tr:nth-child(even),
+    .log-table tbody tr:nth-child(odd) { background: #ffffff; }
     .log-table tbody tr:last-child {
         margin-bottom: 0;
+        border-bottom: none;
     }
 
     .log-table tbody tr.log-row-empty {
         display: table-row;
         border: none;
         padding: 0;
-        margin-bottom: 0;
         background: transparent;
         box-shadow: none;
     }
-
+    .log-table tbody tr.log-row-empty::before { display: none; }
     .log-table tbody tr.log-row-empty td {
         border: none;
-        padding: 2.2rem 0.2rem;
+        padding: 2rem 1rem;
         text-align: center;
     }
 
     .log-table td {
         border-bottom: 0;
         padding: 0;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: clip;
-        font-size: 0.8rem;
-        line-height: 1.35;
-        color: #1e293b;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 0.75rem;
-        min-width: 0;
-        margin-bottom: 0.48rem;
-        box-sizing: border-box;
+        font-size: 0.75rem;
+        color: #334155;
+        display: none;
+        margin-bottom: 0;
+        text-align: left !important;
     }
 
-    .log-table td::before {
-        font-size: 0.58rem;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #94a3b8;
-        flex: 0 0 auto;
-        padding-right: 0.25rem;
-    }
+    .log-table td::before { display: none; }
 
+    /* Row 1: description as title */
+    .log-table .log-cell--desc {
+        display: block;
+        grid-row: 1;
+        grid-column: 2;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #1a2e20;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0;
+        margin: 0;
+        text-align: left;
+    }
+    .log-table .log-cell--desc::before { display: none; }
+
+    /* Row 2: date as subtitle */
     .log-table .log-cell--date {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #0f172a;
-        justify-content: space-between;
-        align-items: flex-start;
-        padding-left: 0.55rem;
-        white-space: normal;
-        overflow: visible;
-        text-overflow: clip;
-        margin-bottom: 0.56rem;
-        border-bottom: 1px solid #eef2f7;
-        padding-bottom: 0.5rem;
+        display: block;
+        grid-row: 2;
+        grid-column: 2;
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: #94a3b8 !important;
+        border: none;
+        padding: 0;
+        margin: 0;
+        text-align: left;
     }
+    .log-table .log-cell--date::before { display: none; }
+    .log-table .log-cell--date .log-date-full { display: none; }
+    .log-table .log-cell--date .log-date-mobile { display: inline; }
 
-    .log-table .log-cell--desc,
+    /* Hide from/to/select */
     .log-table .log-cell--from,
     .log-table .log-cell--to,
-    .log-table .log-cell--hours {
-        padding-left: 0.55rem;
-    }
-
-    .log-table .log-cell--date::before {
-        content: "Date";
-        padding-top: 0;
-    }
-
-    .log-table .log-cell--desc {
-    color: #475569;
-    font-size: 0.78rem;
-    word-break: break-word;
-    margin-bottom: 0.45rem;
-    display: flex;
-    overflow: visible;
-    max-width: 100%;
-    text-align: left;
-}
-    .log-table .log-cell--desc::before {
-        content: "Description";
-    }
-
-    .log-table .log-cell--from::before {
-        content: "From";
-    }
-
-    .log-table .log-cell--to::before {
-        content: "To";
-    }
+    .log-table .log-cell--select { display: none !important; }
 
     .log-table .log-cell--hours {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-bottom: 0.6rem;
-        border-bottom: 1px solid #eef2f7;
-        padding-right: 0;
-        margin-bottom: 0;
-    }
-
-    .log-table .log-cell--hours::before {
-        content: "Hours";
-    }
-
-    .log-table .log-cell--select {
-        position: absolute;
-        left: 0.7rem;
-        top: 0.9rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .log-table .log-cell--select::before,
-    .log-table .log-cell--actions::before {
-        content: none;
-    }
-
-    .log-table .log-cell--actions {
-        position: absolute;
-        right: 0.7rem;
-        bottom: 0.7rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: auto;
-        margin-top: 0;
-        margin-bottom: 0;
+        display: block;
+        grid-row: 1 / 3;
+        grid-column: 3;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1a2e20;
         padding: 0;
-        gap: 0;
+        margin: 0;
+        align-self: center;
     }
+    .log-table .log-cell--hours::before { display: none; }
 
+    /* Actions on far right */
+    .log-table .log-cell--actions {
+        display: flex;
+        grid-row: 1 / 3;
+        grid-column: 4;
+        gap: 0.25rem;
+        padding: 0;
+        margin: 0;
+        align-self: center;
+    }
+    .log-table .log-cell--actions::before { display: none; }
+    .log-table .log-cell--actions .action-btn,
     .log-table .log-cell--actions .icon-btn {
-        width: 30px;
-        height: 30px;
-        border-radius: 999px;
-        background: #f8fafc;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #f8fafb;
         border: 1px solid #e2e8f0;
-        color: #2d6a4f;
+        color: #64748b;
         padding: 0;
         min-width: 0;
         min-height: 0;
@@ -1100,19 +1242,24 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         align-items: center;
         justify-content: center;
     }
-
-    .log-table .highlight-hrs {
-        font-size: 0.82rem;
-        padding: 0.2rem 0.42rem;
-        border-radius: 0.5rem;
-        background: #ecfdf5;
-        color: #059669;
-        font-weight: 800;
-        display: inline-block;
+    .log-table .log-cell--actions .action-btn svg,
+    .log-table .log-cell--actions .icon-btn svg {
+        width: 14px;
+        height: 14px;
     }
 
-    .log-table tbody tr:hover td {
-        background: transparent;
+    /* Hide from/to/select cells */
+    .log-table .log-cell--from,
+    .log-table .log-cell--to,
+    .log-table .log-cell--select { display: none; }
+
+    .log-table .highlight-hrs {
+        font-size: inherit;
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        color: inherit;
+        font-weight: inherit;
     }
 
     .log-table tbody tr.row-selected {
@@ -1229,7 +1376,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         max-height: calc(100dvh - 4.1rem);
         overflow-y: auto;
         margin: 0;
-        padding: 0.9rem 0.78rem 0.68rem !important;
+        padding: 0.9rem 0.78rem 4.5rem !important;
         position: relative;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
@@ -1313,17 +1460,19 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     }
 
     .modal-card--add-log .modal-actions {
-        position: sticky;
-        bottom: 0;
+        position: fixed;
+        bottom: 64px;
+        left: 0;
+        right: 0;
         margin-top: 0.45rem;
-        padding-top: 0.48rem;
-        padding-bottom: env(safe-area-inset-bottom, 0);
+        padding: 0.6rem 1.1rem;
         background: #ffffff;
         border-top: 1px solid rgba(15, 23, 42, 0.08);
         display: grid;
         grid-template-columns: 0.9fr 1.1fr;
         gap: 0.45rem;
         flex-direction: unset;
+        z-index: 211;
     }
 
     .modal-card--add-log .modal-actions .btn,
@@ -1363,7 +1512,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         max-height: calc(100dvh - 4.1rem);
         overflow-y: auto;
         margin: 0;
-        padding: 0.9rem 0.78rem 0.68rem !important;
+        padding: 0.9rem 0.78rem 4.5rem !important;
         position: relative;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
@@ -1447,17 +1596,19 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     }
 
     .modal-card--edit-log .modal-actions {
-        position: sticky;
-        bottom: 0;
+        position: fixed;
+        bottom: 64px;
+        left: 0;
+        right: 0;
         margin-top: 0.45rem;
-        padding-top: 0.48rem;
-        padding-bottom: env(safe-area-inset-bottom, 0);
+        padding: 0.6rem 1.1rem;
         background: #ffffff;
         border-top: 1px solid rgba(15, 23, 42, 0.08);
         display: grid;
         grid-template-columns: 0.9fr 1.1fr;
         gap: 0.45rem;
         flex-direction: unset;
+        z-index: 211;
     }
 
     .modal-card--edit-log .modal-actions .btn,
@@ -1509,7 +1660,7 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
         max-height: calc(100dvh - 4.1rem);
         overflow-y: auto;
         margin: 0;
-        padding: 0.9rem 0.78rem 0.68rem !important;
+        padding: 0.9rem 0.78rem 8rem !important;
         position: relative;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
@@ -1619,17 +1770,19 @@ html { font-size: var(--base-size); }  /* rem is now anchored to this fluid valu
     }
 
     .modal-card--bulk-log .modal-actions {
-        position: sticky;
-        bottom: 0;
+        position: fixed;
+        bottom: 64px;
+        left: 0;
+        right: 0;
         margin-top: 0.45rem;
-        padding-top: 0.48rem;
-        padding-bottom: env(safe-area-inset-bottom, 0);
+        padding: 0.6rem 1.1rem;
         background: #ffffff;
         border-top: 1px solid rgba(15, 23, 42, 0.08);
         display: grid;
         grid-template-columns: 0.9fr 1.1fr;
         gap: 0.45rem;
         flex-direction: unset;
+        z-index: 211;
     }
 
     .modal-card--bulk-log .modal-actions .btn,

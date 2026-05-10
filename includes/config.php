@@ -334,3 +334,93 @@ function bulk_add_logs(int $user_id, array $logs): int {
     }
     return $count;
 }
+
+// ── Note Tags ─────────────────────────────────────────────────
+function ensure_note_tags_table(): void {
+    db()->exec("CREATE TABLE IF NOT EXISTS note_tags (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        name VARCHAR(50) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_user_tag (user_id, name),
+        CONSTRAINT fk_note_tags_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )");
+}
+
+function get_user_tags(int $user_id): array {
+    ensure_note_tags_table();
+    // One-time reset: clear old tags and seed new defaults
+    $stmt = db()->prepare('SELECT COUNT(*) FROM note_tags WHERE user_id = ? AND name IN (?, ?)');
+    $stmt->execute([$user_id, 'Personal', 'Work']);
+    $has_new = (int) $stmt->fetchColumn();
+    if ($has_new === 0) {
+        db()->prepare('DELETE FROM note_tags WHERE user_id = ?')->execute([$user_id]);
+        $defaults = ['Personal', 'Work'];
+        foreach ($defaults as $t) { add_user_tag($user_id, $t); }
+        return $defaults;
+    }
+    $stmt = db()->prepare('SELECT name FROM note_tags WHERE user_id = ? ORDER BY created_at');
+    $stmt->execute([$user_id]);
+    $tags = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    return $tags ?: ['Personal', 'Work'];
+}
+
+function add_user_tag(int $user_id, string $name): bool {
+    ensure_note_tags_table();
+    try {
+        $stmt = db()->prepare('INSERT INTO note_tags (user_id, name) VALUES (?, ?)');
+        $stmt->execute([$user_id, $name]);
+        return true;
+    } catch (PDOException $e) { return false; }
+}
+
+function delete_user_tag(int $user_id, string $name): void {
+    ensure_note_tags_table();
+    $stmt = db()->prepare('DELETE FROM note_tags WHERE user_id = ? AND name = ?');
+    $stmt->execute([$user_id, $name]);
+}
+
+function get_notes(int $user_id): array {
+    $stmt = db()->prepare('SELECT * FROM notes WHERE user_id = ? ORDER BY date DESC, created_at DESC');
+    $stmt->execute([$user_id]);
+    return $stmt->fetchAll();
+}
+ 
+function add_note(int $user_id, array $note): void {
+    $stmt = db()->prepare('
+        INSERT INTO notes (id, user_id, title, body, tag, date)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ');
+    $stmt->execute([
+        $note['id'],
+        $user_id,
+        $note['title'],
+        $note['body'],
+        $note['tag'] ?? 'General',
+        $note['date'],
+    ]);
+}
+ 
+function update_note(string $note_id, int $user_id, array $note): void {
+    $stmt = db()->prepare('
+        UPDATE notes SET
+            title = ?,
+            body  = ?,
+            tag   = ?,
+            date  = ?
+        WHERE id = ? AND user_id = ?
+    ');
+    $stmt->execute([
+        $note['title'],
+        $note['body'],
+        $note['tag'] ?? 'General',
+        $note['date'],
+        $note_id,
+        $user_id,
+    ]);
+}
+ 
+function delete_note(string $note_id, int $user_id): void {
+    $stmt = db()->prepare('DELETE FROM notes WHERE id = ? AND user_id = ?');
+    $stmt->execute([$note_id, $user_id]);
+}

@@ -70,24 +70,7 @@ foreach ($all_logs as $l) {
 include 'includes/header.php';
 ?>
 
-<div class="content">
-<div class="dash-wrap">
-  <div class="dash-hero">
-    <div class="dash-hero-content">
-      <div class="dash-hero-eyebrow">OJT Dashboard</div>
-      <h1 class="dash-hero-title"><?= $greeting ?>, <?= e(explode(' ', $user['name'] ?? $user['username'])[0]) ?> 👋</h1>
-      <div class="dash-hero-status" id="hero-today-status">
-        <div class="dash-hero-status-top">
-          <span class="dash-hero-status-title">Today's Status</span>
-          <span class="status-badge <?= $today_log ? 'logged' : 'pending' ?>"><?= $today_log ? 'Logged' : 'Pending' ?></span>
-        </div>
-        <span class="dash-hero-status-meta">Day <?= $total_days ?> of OJT &nbsp;·&nbsp; <?= date('D, M j, Y') ?></span>
-        <button type="button" class="dash-hero-status-link" data-open-quick-log>Quick Log</button>
-      </div>
-    </div>
-  </div>
-
-  <?php
+<?php
     $week_start = date('Y-m-d', strtotime('monday this week'));
     $week_end = date('Y-m-d', strtotime('sunday this week'));
     $week_logged_dates = [];
@@ -102,8 +85,74 @@ include 'includes/header.php';
     $total_collected_allowance = $total_days * $allowance;
     $remaining_money_by_days_left = max(0, $projected_days * $allowance);
     $week_range_label = date('M j', strtotime($week_start)) . ' - ' . date('M j', strtotime($week_end));
-  ?>
-  <div class="dash-stat-row-3">
+?>
+
+<div class="content">
+<div class="dash-wrap">
+
+  <!-- ── Hero stat card with greeting ── -->
+  <div class="m-hero-card">
+    <div class="m-hero-greeting"><?= $greeting ?>, <?= e(explode(' ', $user['name'] ?? $user['username'])[0]) ?> 👋</div>
+    <div class="m-hero-header">
+      <span class="m-today-status"><span class="m-today-label">Today</span> <span class="m-today-badge <?= $today_log ? 'logged' : 'pending' ?>"><?= $today_log ? 'Logged' : 'Pending' ?></span></span>
+      <button type="button" class="m-hero-log-btn" data-open-quick-log>+ Quick Log</button>
+    </div>
+    <div class="m-hero-number"><?= number_format($logged, 1) ?></div>
+    <div class="m-hero-sublabel">Hours logged<?php if ($est_date && $est_date !== 'Completed'): ?> · Est. <?= e($est_date) ?><?php elseif ($est_date === 'Completed'): ?> · Completed 🎉<?php endif; ?></div>
+    <div class="m-hero-bar">
+      <div class="m-hero-bar-fill" style="width:<?= min(100, $pct) ?>%"></div>
+    </div>
+    <div class="m-hero-stats">
+      <div class="m-hero-stat">
+        <span class="m-hero-stat-value"><?= number_format($remaining, 0) ?><span class="m-hero-stat-unit">hrs</span></span>
+        <span class="m-hero-stat-label">Remaining</span>
+      </div>
+      <div class="m-hero-stat">
+        <span class="m-hero-stat-value"><?= $total_days ?></span>
+        <span class="m-hero-stat-label">Day of OJT</span>
+      </div>
+      <div class="m-hero-stat">
+        <span class="m-hero-stat-value"><?= number_format($pct, 0) ?>%</span>
+        <span class="m-hero-stat-label">Complete</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Allowance mini card ── -->
+  <div class="m-allowance-card">
+    <div class="m-allowance-row">
+      <div class="m-allowance-item">
+        <span class="m-allowance-label">This Week</span>
+        <span class="m-allowance-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($weekly_collected_allowance, 0) ?></span>
+      </div>
+      <div class="m-allowance-item">
+        <span class="m-allowance-label">Total</span>
+        <span class="m-allowance-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($total_collected_allowance, 0) ?></span>
+      </div>
+      <div class="m-allowance-item">
+        <span class="m-allowance-label">Left to Earn</span>
+        <span class="m-allowance-value"><?= get_currency_symbol($user['currency']) ?><?= number_format($remaining_money_by_days_left, 0) ?></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Desktop hero (hidden on mobile) ── -->
+  <div class="dash-hero desktop-only">
+    <div class="dash-hero-content">
+      <div class="dash-hero-eyebrow">OJT Dashboard</div>
+      <h1 class="dash-hero-title"><?= $greeting ?>, <?= e(explode(' ', $user['name'] ?? $user['username'])[0]) ?> 👋</h1>
+      <div class="dash-hero-status" id="hero-today-status">
+        <div class="dash-hero-status-top">
+          <span class="dash-hero-status-title">Today's Status</span>
+          <span class="status-badge <?= $today_log ? 'logged' : 'pending' ?>"><?= $today_log ? 'Logged' : 'Pending' ?></span>
+        </div>
+        <span class="dash-hero-status-meta">Day <?= $total_days ?> of OJT &nbsp;·&nbsp; <?= date('D, M j, Y') ?></span>
+        <button type="button" class="dash-hero-status-link" data-open-quick-log>Quick Log</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-stat-row-3 desktop-only">
 
     <div class="dash-stat-card dash-stat-card--progress">
       <div class="dash-stat-eyebrow">Total Progress</div>
@@ -118,16 +167,15 @@ include 'includes/header.php';
     </div>
 
     <div class="dash-stat-card dash-stat-card--remaining">
-      <div class="dash-stat-eyebrow">Remaining Hours</div>
+      <div class="dash-stat-eyebrow">Remaining</div>
       <div class="dash-stat-num"><?= number_format($remaining, 1) ?> <span class="dash-stat-denom">hrs</span></div>
-      <div class="dash-stat-sub">hours left to complete your OJT</div>
       <?php if ($avg_hrs_day > 0): ?>
         <div class="dash-remaining-pill">
           <svg viewBox="0 0 24 24" fill="currentColor" class="icon-xs"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-          Avg <?= $avg_hrs_day ?> hrs/day · <?= $projected_days ?> days left
+          <?= $avg_hrs_day ?> hrs/day · <?= $projected_days ?> days
         </div>
       <?php else: ?>
-        <div class="dash-remaining-pill">Log hours to see your pace</div>
+        <div class="dash-remaining-pill">Log to see pace</div>
       <?php endif; ?>
     </div>
 
@@ -150,7 +198,43 @@ include 'includes/header.php';
       </div>
     </div>
 
-  <div class="dash-body">
+  <!-- ── Recent Logs (mobile: simple list) ── -->
+  <div class="m-recent-section">
+    <div class="m-section-header">
+      <h2 class="m-section-title">Recent Logs</h2>
+      <a href="logs.php" class="m-section-link">View all</a>
+    </div>
+    <?php if (empty($recent_logs)): ?>
+      <div class="m-empty">No logs yet. Tap + to add your first entry.</div>
+    <?php else: ?>
+      <div class="m-log-list">
+        <?php foreach (array_slice($recent_logs, 0, 4) as $log): ?>
+          <div class="m-log-item">
+            <div class="m-log-dot"></div>
+            <div class="m-log-content">
+              <div class="m-log-title"><?= e($log['description'] ?: date('l', strtotime($log['date']))) ?></div>
+              <div class="m-log-sub"><?= e(date('M j', strtotime($log['date']))) ?> · <?= e(date('g:i A', strtotime($log['from']))) ?> – <?= e(date('g:i A', strtotime($log['to']))) ?></div>
+            </div>
+            <div class="m-log-hrs"><?= number_format($log['hours'], 1) ?>h</div>
+            <div class="m-log-actions">
+              <button type="button" class="m-log-edit edit-btn" data-id="<?= e($log['id']) ?>" data-date="<?= e($log['date']) ?>" data-desc="<?= e($log['description'] ?? '') ?>" data-from="<?= e($log['from']) ?>" data-to="<?= e($log['to']) ?>" aria-label="Edit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+              </button>
+              <form method="POST" action="dashboard.php" class="m-log-delete-form" onsubmit="return confirm('Delete this log?')">
+                <input type="hidden" name="action" value="delete_log" />
+                <input type="hidden" name="log_id" value="<?= e($log['id']) ?>" />
+                <button type="submit" class="m-log-delete" aria-label="Delete">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </form>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+  </div>
+
+  <div class="dash-body desktop-only">
     <div class="dash-left">
       <div class="table-header-group">
         <h2 class="table-title">Recent Logs</h2>
@@ -202,6 +286,12 @@ include 'includes/header.php';
 
   </div>
 </div>
+
+
+<!-- Mobile FAB for Quick Log -->
+<button type="button" class="mobile-fab" data-open-quick-log aria-label="Quick Log">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
 
 <div class="modal-overlay" id="quick-log-modal">
   <div class="modal-card modal-card--quick-log" style="max-width:min(520px, 95vw);">

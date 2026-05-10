@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $user = current_user(); $all_logs = $user['logs'] ?? []; usort($all_logs, fn($a, $b) => strtotime($b['date']) - strtotime($a['date']));
 $log_map = []; foreach ($all_logs as $l) { $log_map[$l['date']][] = $l; }
 
-$logs_per_page = 6;
+$logs_per_page = 10;
 $current_page = max(1, intval($_GET['page'] ?? 1));
 $total_logs = count($all_logs);
 $is_first_time_logs_user = ($total_logs === 0);
@@ -177,15 +177,22 @@ include 'includes/header.php';
                         <?php foreach ($paginated_logs as $log): ?>
                         <tr>
                             <td class="log-cell log-cell--select" style="text-align:center;"><input type="checkbox" class="row-checkbox custom-checkbox" value="<?= e($log['id']) ?>" /></td>
-                            <td class="log-cell log-cell--date" style="color:var(--text);"><?= e(date('M j, Y', strtotime($log['date']))) ?></td>
-                            <td class="log-cell log-cell--desc"><?= e(strlen($log['description']) > 30 ? substr($log['description'], 0, 30) . '...' : ($log['description'] ?: '—')) ?></td>
+                            <td class="log-cell log-cell--date" style="color:var(--text);"><span class="log-date-full"><?= e(date('M j, Y', strtotime($log['date']))) ?></span><span class="log-date-mobile"><?= e(date('M j', strtotime($log['date']))) ?> · <?= e(date('g:i A', strtotime($log['from']))) ?> – <?= e(date('g:i A', strtotime($log['to']))) ?></span></td>
+                            <td class="log-cell log-cell--desc"><?= e(strlen($log['description']) > 30 ? substr($log['description'], 0, 30) . '...' : ($log['description'] ?: date('l', strtotime($log['date'])))) ?></td>
                             <td class="log-cell log-cell--from"><?= e(date('g:i A', strtotime($log['from']))) ?></td>
                             <td class="log-cell log-cell--to"><?= e(date('g:i A', strtotime($log['to']))) ?></td>
-                            <td class="log-cell log-cell--hours col-hrs"><span class="highlight-hrs"><?= e(number_format($log['hours'], 1)) ?></span></td>
+                            <td class="log-cell log-cell--hours col-hrs"><span class="highlight-hrs"><?= e(number_format($log['hours'], 1)) ?>h</span></td>
                             <td class="log-cell log-cell--actions" style="text-align:center;">
                                 <button class="icon-btn edit-btn" data-id="<?= e($log['id']) ?>" data-date="<?= e($log['date']) ?>" data-desc="<?= e($log['description'] ?? '') ?>" data-from="<?= e($log['from']) ?>" data-to="<?= e($log['to']) ?>" title="Edit">
                                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                                 </button>
+                                <form method="POST" action="logs.php" style="display:inline;" onsubmit="return confirm('Delete this log?')">
+                                    <input type="hidden" name="action" value="delete_log" />
+                                    <input type="hidden" name="log_id" value="<?= e($log['id']) ?>" />
+                                    <button type="submit" class="icon-btn delete-btn" title="Delete">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         <?php endforeach; ?><?php endif; ?>
@@ -282,7 +289,7 @@ include 'includes/header.php';
         <div class="form-group" style="margin:0;"><label class="form-label-styled">From</label><input class="form-input-styled" type="date" name="bulk_start" id="bulk-start" required /></div>
         <div class="form-group" style="margin:0;"><label class="form-label-styled">To</label><input class="form-input-styled" type="date" name="bulk_end" id="bulk-end" required /></div>
       </div>
-      <div class="form-group" style="margin-bottom:1.25rem;"><label class="form-label-styled">Hrs/Day</label><input class="form-input-styled" type="number" name="bulk_hrs" id="bulk-hrs" value="8" min="0.5" max="24" step="0.5" required /></div>
+      <div class="form-group" style="margin-bottom:1.25rem;"><label class="form-label-styled">Hrs/Day</label><select class="form-input-styled" name="bulk_hrs" id="bulk-hrs" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8" selected>8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></div>
       <input type="hidden" name="bulk_from" value="08:00" /><input type="hidden" name="bulk_to" id="bulk-to-hidden" value="16:00" />
       <div class="form-group" style="margin-bottom:1.25rem;">
                 <label class="form-label-styled" style="margin-bottom:0.625rem;">Exclude Days <span class="bulk-exclude-hint">(SELECTED = SKIP)</span></label>
